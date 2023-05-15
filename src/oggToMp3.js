@@ -6,11 +6,11 @@ import {dirname, resolve} from 'path';
 import { fileURLToPath } from 'url';
 import removeFile from "./utils.js"; // обязательно нужно указать расширение js, иначе словим ошибку
 
-// console.log(import.meta.url) // путь до файла, вызвавшего скрипт
+// console.log(import.meta.url) // путь до файла, вызвавшего скрипт, в нашем случае до файла oggToMp3.js
 
 const __dirname = dirname(fileURLToPath(import.meta.url))
 
-console.log(__dirname);
+// console.log(__dirname);
 
 class OggConverter {
   constructor() {
@@ -28,6 +28,8 @@ class OggConverter {
         responseType: 'stream', // будем получать ответ в качестве стрима
       });
 
+      // throw new Error("500 Internal Server Error");
+
       //так как мы работаем в асинхронной функции, её итогом мы можем вернуть промис выполнения наших задач
       return new Promise((resolve) => {  
       const stream = createWriteStream(oggPath);
@@ -41,8 +43,10 @@ class OggConverter {
       //   return oggPath;  // так тоже работает без всяких промисов. хз - оставим таки версию с промисом
       // });
       
+      
     } catch(e) {
-      console.log('error creating ogg file', e.message);
+      // await ctx.reply('Ошибка создания огг-файла, текст ошибки: ', err.message)
+      console.log('Ошибка создания огг-файла, текст ошибки: ', err.message);
     }
 }
 
@@ -51,6 +55,9 @@ toMp3(inputPath, outputName) {
   
   try {
     const outputPath = resolve(dirname(inputPath), `${outputName}.mp3`)
+
+    // throw new Error('тестовая ошибка')
+
     return new Promise((resolve, reject) => {
       ffmpeg(inputPath) // запускаем конвертер для нашего огг-файла, указывая путь до него
         .inputOption('-t 30') // настройка кодека, не вникаем
@@ -62,7 +69,9 @@ toMp3(inputPath, outputName) {
         .on('error', (err) => reject(err.message)) 
         .run() // запускаем кодек
     })
+    
   } catch(err) {
+    // ctx.reply('Ошибка трансформации огг-файла в mp3, текст ошибки: ', err.message)
     console.log('error transform ogg file to mp3', err.message);
   }
 }

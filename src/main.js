@@ -2,14 +2,13 @@ import { Telegraf, session } from 'telegraf'; // для работы с бото
 import { message } from 'telegraf/filters' // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига
+
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
+import { INIT_SESSION } from './const.js';
+// import nodemon from 'nodemon';
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
-
-const INIT_SESSION = {
-  messages: []
-}
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -21,22 +20,28 @@ bot.use(session()); // подключаем мидлвеир, который у�
 
 //  прописываем то, что при получении комманды "/start" - телеграм бот должен будет нам ответить сообщением-объектом ctx.message. П.С. command - это именно комманды бота
 bot.command('start', async (ctx) => {
-  ctx.session = INIT_SESSION;
+  ctx.session = JSON.parse(JSON.stringify(INIT_SESSION)) // глубокое клонирование
+  // console.log(ctx.session.messages)
   await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате')
 })  
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command('new', async (ctx) => {
-  ctx.session = INIT_SESSION;
-  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате')
+  // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
+  // ctx.session = Object.assign({}, INIT_SESSION) // поверхностное клонирование,  нам не подходит так как там вложенные объекты
+  // ctx.session = structuredClone(INIT_SESSION); // стандартная функция в ноде версии 17+. Так как у нас 16, нельзя использовать
+  // ctx.session = cloneDeep(INIT_SESSION); // лодэш как то странно работает с нодой
+  ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
+  console.log(ctx.session.messages)
+  console.log(INIT_SESSION);
+  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 })
 
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
-  ctx.session ??= INIT_SESSION; // если ctx.session по какой либо причине не определено, то сразу прогружаем INIT_SESSION
+  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
-  // await ctx.reply(code(`Ваш запрос таков: ${ctx.message.text}`));
 
   ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text});
 
@@ -47,22 +52,35 @@ try {
     content: response.content,
   })
 
-  // console.log(ctx.session)  // смотрим что у него в контексте сейчас
-
   await ctx.reply(response.content);
 
-  // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок, пишем так
+  console.log(ctx.session.messages)
+  console.log(INIT_SESSION);
+  console.log(INIT_SESSION === ctx.session);
+
+  // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок
 
 } catch(err) {
-  console.log('text chat error', err.message)
+  if (err) {
+   await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
+   console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
+   // перезапускаем бота при ошибке и обнуляем контекст общения 
+   bot.stop();
+   console.log(INIT_SESSION)
+   ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
+   bot.launch();
+  } else {
+    await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
+    console.log('Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat')
+  }
 }
   }) 
 
   bot.on(message('voice'), async (ctx) => {
-    ctx.session ??= INIT_SESSION; // если ctx.session по какой либо причине не определено, то сразу прогружаем INIT_SESSION
+    ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
+    console.log(ctx.session.messages)
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
-    // console.log(ctx.telegram.getFileLink)
   
   const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id); // получаем от телеграмбота ссылку на нашу голосовую запись с расширением .ogg
   const userId = String(ctx.message.from.id);
@@ -80,14 +98,16 @@ try {
   
   const response = await openAi.chat(ctx.session.messages);
   
-  // после того как получаем отвер от аи - добавляем его в наш объект с сессией с пометкой ассистент
+  // после того как получаем ответ от аи - добавляем его в наш объект с сессией с пометкой ассистент
   ctx.session.messages.push({
     role: openAi.roles.ASSISTANT, // помечаем что этот контент пришел именно от самого бота
     content: response.content,
   })
-  
+
   // выводим ответ аи в боте
   await ctx.reply(response.content);
+
+  // throw new Error("500 Internal Server Error");
   
   // await ctx.reply(JSON.stringify(link, null, 2)); // парсим джейсон
   
@@ -95,11 +115,25 @@ try {
   // console.log(link.href); // именно эта ссылка нам будет нужна
   
   } catch(err) {
-    console.log('voice send error', err.message)
+    if (err) {
+
+      bot.stop();
+      console.log(INIT_SESSION)
+      ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
+      bot.launch();
+
+      await ctx.reply(`Ошибка работы с голосовым чатом аи, текст ошибки: ${err.message}`)
+      console.log('Ошибка работы с голосовым чатом аи, текст ошибки: ', err.message)
+    } else {
+      await ctx.reply(`Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле`)
+      console.log('Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле')
+    }
+    
   }
     }) 
 
 bot.launch();
+// nodemon({ script: bot.launch(), exitcrash: true }); // перезапуск через nodemon. Работает криво
 
 process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условиям
 process.once('SIGTERM', () => bot.stop('SIGTERM')); // остановка бота по условиям
