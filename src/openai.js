@@ -25,7 +25,8 @@ class openAI {
       );
       return response.data.text;
     } catch(e) {
-      console.log('Error from transcription', e.message)
+      // await ctx.reply('Ошибка перевода голоса в текст в аи, текст ошибки: ', err.message)
+      console.log('Ошибка перевода голоса в текст в аи, текст ошибки: ', err.message)
     }
   }
 
@@ -37,7 +38,10 @@ class openAI {
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
       })
       return response.data.choices[0].message;
+      
+      // throw new Error("500 Internal Server Error");
     } catch(err) {
+      // await ctx.reply('Ошибка ответа от чата-аи, текст ошибки: ', err.message)
       console.log('error chating with gpt', err.message);
     }
   }
