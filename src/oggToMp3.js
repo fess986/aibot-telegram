@@ -51,7 +51,7 @@ class OggConverter {
 }
 
 toMp3(inputPath, outputName) {
-  console.log(inputPath)
+  // console.log(inputPath)
   
   try {
     const outputPath = resolve(dirname(inputPath), `${outputName}.mp3`)

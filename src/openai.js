@@ -7,6 +7,8 @@ class openAI {
   constructor(apiKey) {
     const configuration = new Configuration({
       apiKey,
+      models: ['davinci'],
+      temperature: 0.5,
     });
     this.openai = new OpenAIApi(configuration);
   }

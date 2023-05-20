@@ -5,7 +5,7 @@ import config from 'config'; // для того чтобы можно было �
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
-import { roles, INIT_SESSION } from './context.js'
+import { roles, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -17,12 +17,37 @@ bot.start((ctx) => {
 
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
+// bot.use((ctx, next) => {
+//   // получаем текущую дату и время
+//   const currentDate = new Date();
+//   console.log(currentDate)
+//   // сохраняем дату и время в сессионное хранилище
+//   ctx.session.currentDate = currentDate;
+//   // передаем управление следующему обработчику
+//   next();
+// });
+
+// прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата
+bot.use((ctx, next) => {
+  const currentDate = new Date();
+  // console.log(currentDate);
+  // Проверяем существует ли объект ctx.session
+  if (!ctx.session) {
+    ctx.session = {};
+  }
+  ctx.session.currentDate ??= currentDate;
+  //console.log(ctx.session.currentDate);
+  next();
+});
+
 //  прописываем то, что при получении комманды "/start" - телеграм бот должен будет нам ответить сообщением-объектом ctx.message. П.С. command - это именно комманды бота
 bot.command('start', async (ctx) => {
   ctx.session = JSON.parse(JSON.stringify(INIT_SESSION)) // глубокое клонирование
   // console.log(ctx.session.messages)
   await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате')
 })  
+
+
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command('new', async (ctx) => {
@@ -35,9 +60,47 @@ bot.command('new', async (ctx) => {
   await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 })
 
+bot.command('max', async (ctx) => {
+  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
+  ctx.session.messages.push(CONTEXT_MAX);
+
+  // вариант если мы достаем текущее время из контекста. На данный момент вместо этого мы используем время, которое в миддлвеире прописываем в сессию - ctx.session.currentDate
+
+  // function getMonthName(date) {
+  //   const monthNames = [
+  //     'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
+  //     'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
+  //   ];
+  //   return monthNames[date.getMonth()];
+  // }
+
+  // const messageDate = new Date(ctx.message.date * 1000);
+  // const formattedDate = `${messageDate.getDate()} ${getMonthName(messageDate)} ${messageDate.getFullYear()} года. Время ${messageDate.getHours()} часов, ${messageDate.getMinutes()} минут`;
+
+  ctx.session.messages.push({
+    role: roles.USER, 
+    content: `Время, которое мы будем использовать в текущей беседе - ${ctx.session.currentDate}, то есть, если я спрошу, какое сейчас время, в ответе руководствуйся этими данными. При этом отсчитывай время отталкиваясь от этой минуты, чтобы получать актуальное время в контексте нашего общения`,
+  });
+  console.log(ctx.session.messages);
+})
+
+bot.command('prog', async (ctx) => {
+  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
+  ctx.session.messages.push(CONTEXT_PROGRAMMER);
+  console.log(ctx.session.messages);
+})
+
+bot.command('bot', async (ctx) => {
+  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
+  ctx.session.messages.push(CONTEXT_CHAT_BOT);
+  console.log(ctx.session.messages);
+})
+
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
   ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
+  
+  console.log(ctx.session.currentDate);
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
@@ -63,8 +126,8 @@ try {
    // перезапускаем бота при ошибке и обнуляем контекст общения 
    bot.stop();
    // console.log(INIT_SESSION)
+   console.log(ctx.session) // будем выводить контекст в консоль чтобы анализировать из за чего мог зависнуть бот
    ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
-   console.log(ctx.session)
    bot.launch();
   } else {
     await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
