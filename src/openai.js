@@ -4,12 +4,6 @@ import { createReadStream } from 'fs'
 
 class openAI {
 
-  roles = {
-    ASSISTANT: 'assistant',
-    USER: 'user',
-    SYSTEM: 'system',
-  }
-
   constructor(apiKey) {
     const configuration = new Configuration({
       apiKey,
