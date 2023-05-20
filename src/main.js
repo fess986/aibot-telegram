@@ -5,15 +5,14 @@ import config from 'config'; // для того чтобы можно было �
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
-import { INIT_SESSION } from './const.js';
-// import nodemon from 'nodemon';
+import { roles, INIT_SESSION } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 bot.start((ctx) => {
-  // ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
+  ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
 });
 
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
@@ -32,8 +31,7 @@ bot.command('new', async (ctx) => {
   // ctx.session = structuredClone(INIT_SESSION); // стандартная функция в ноде версии 17+. Так как у нас 16, нельзя использовать
   // ctx.session = cloneDeep(INIT_SESSION); // лодэш как то странно работает с нодой
   ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
-  console.log(ctx.session.messages)
-  console.log(INIT_SESSION);
+  // console.log(ctx.session.messages)
   await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 })
 
@@ -43,20 +41,18 @@ bot.on(message('text'), async (ctx) => {
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
-  ctx.session.messages.push({role: openAi.roles.USER, content: ctx.message.text});
+  ctx.session.messages.push({role: roles.USER, content: ctx.message.text});
 
   const response = await openAi.chat(ctx.session.messages);
 
   ctx.session.messages.push({
-    role: openAi.roles.ASSISTANT, 
+    role: roles.ASSISTANT, 
     content: response.content,
   })
 
   await ctx.reply(response.content);
 
   console.log(ctx.session.messages)
-  console.log(INIT_SESSION);
-  console.log(INIT_SESSION === ctx.session);
 
   // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок
 
@@ -66,8 +62,9 @@ try {
    console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
    // перезапускаем бота при ошибке и обнуляем контекст общения 
    bot.stop();
-   console.log(INIT_SESSION)
+   // console.log(INIT_SESSION)
    ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
+   console.log(ctx.session)
    bot.launch();
   } else {
     await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
@@ -77,8 +74,8 @@ try {
   }) 
 
   bot.on(message('voice'), async (ctx) => {
-    ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
-    console.log(ctx.session.messages)
+    ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
+    // console.log(ctx.session.messages)
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
   
@@ -94,13 +91,13 @@ try {
   
   // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
   
-  ctx.session.messages.push({role: openAi.roles.USER, content: text});
+  ctx.session.messages.push({role: roles.USER, content: text});
   
   const response = await openAi.chat(ctx.session.messages);
   
   // после того как получаем ответ от аи - добавляем его в наш объект с сессией с пометкой ассистент
   ctx.session.messages.push({
-    role: openAi.roles.ASSISTANT, // помечаем что этот контент пришел именно от самого бота
+    role: roles.ASSISTANT, // помечаем что этот контент пришел именно от самого бота
     content: response.content,
   })
 
@@ -113,12 +110,14 @@ try {
   
   // console.log(link); // тут мы понимаем, что стринглифай немного неправильно приводит объект к строке. на самом деле это действительно полноценный объект с полем href которое нас будет интересовать в дальнейшем
   // console.log(link.href); // именно эта ссылка нам будет нужна
+
+  // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок
   
   } catch(err) {
     if (err) {
 
       bot.stop();
-      console.log(INIT_SESSION)
+      // console.log(INIT_SESSION)
       ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
       bot.launch();
 
