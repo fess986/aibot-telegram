@@ -100,9 +100,13 @@ bot.command('bot', async (ctx) => {
 bot.on(message('text'), async (ctx) => {
   ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
   
-  console.log(ctx.session.currentDate);
+ // console.log(ctx.session.currentDate);
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
+
+  if (!ctx.session.messages) {
+    ctx.session.messages = [];
+  }
 
   ctx.session.messages.push({role: roles.USER, content: ctx.message.text});
 
@@ -153,6 +157,10 @@ try {
   await ctx.reply(code(`Ваш запрос таков: ${text}`));
   
   // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
+
+  if (!ctx.session.messages) {
+    ctx.session.messages = [];
+  }
   
   ctx.session.messages.push({role: roles.USER, content: text});
   
