@@ -24,7 +24,7 @@ export const CONTEXT_CHAT_BOT = {
   content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs , 
   вот так выглядит инициализация бота:
   import { Telegraf, session } from 'telegraf';
-  const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
+  const bot2 = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
   Опен аи инициализируется так:
   import { Configuration, OpenAIApi } from "openai";
