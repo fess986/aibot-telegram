@@ -1,7 +1,8 @@
 import { Telegraf, session } from 'telegraf'; // для работы с ботом телеграмма
 import { message } from 'telegraf/filters' // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
-import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига
+import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
+import axios from "axios";
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
@@ -95,6 +96,84 @@ bot.command('bot', async (ctx) => {
   ctx.session.messages.push(CONTEXT_CHAT_BOT);
   console.log(ctx.session.messages);
 })
+
+bot.command('reload', (ctx) => {
+
+  bot.stop();
+  bot.launch();
+
+})
+
+// для того чтобы получить координаты пользователя, нам необходимо запросить у бота доступ к геолокации.
+// bot.command('w', (ctx) => {
+//   // Отправляем запрос на получение местоположения
+//   ctx.reply('Please share your location', {
+//     // добавляем кнопку для запроса местоположения
+//     reply_markup: { // используется для настройки клавиатуры, которая будет отображаться пользователю, принимает в себя keyboard и другие настройки
+//       keyboard: [ // массив массивов с объектами, которые будут отображаться на клавиатуре
+//         [
+//           {
+//             text: 'Share location',
+//             request_location: true, // запрашивает у пользователя разрешение на использование его местоположения, если он нажмет на эту кнопку
+//             selective: true,
+//           },
+//         ],
+//       ],
+//       selective: true,
+//       resize_keyboard: true, // логическая настройка, которая позволяет изменять размер клавиатуры (true/false)
+//       one_time_keyboard: true, // логическая настройка, которая позволяет удалять клавиатуру после ее использования (true/false)
+//       remove_keyboard: true,
+//     },
+//   });
+// });
+
+// запрос погоды
+bot.command('w', (ctx) => {
+  // Отправляем запрос на получение местоположения
+  ctx.reply('Пожалуйста, поделитесь своим местоположением для того чтобы узнать прогноз погоды', {
+    // добавляем кнопку для запроса местоположения
+    reply_markup: { 
+      keyboard: [ // массив массивов с объектами, которые будут отображаться на клавиатуре
+        [
+          {
+            text: 'Поделиться местоположением',
+            request_location: true, // запрашивает у пользователя разрешение на использование его местоположения, если он нажмет на эту кнопку
+          },
+        ],
+      ],
+      resize_keyboard: true, // логическая настройка, которая позволяет изменять размер клавиатуры (true/false)
+      one_time_keyboard: true, // логическая настройка, которая должна позволять удалять клавиатуру после ее использования (true/false), по факту она просто скрывает в "бутерброд" эту кнопку, а удаляем мы ее уже после
+      // remove_keyboard: true, - тут эта настройка не работает почему то
+      selective: true,
+    },
+  })
+  .then(() => {
+    setTimeout(() => {
+      ctx.reply('Запрос геолокации удален', {
+        reply_markup: {
+          remove_keyboard: true, // удалаяем кнопку через 10 сек
+        },
+      });
+    }, 10000); // Задержка в 5 секунд
+  });
+});
+
+// Обработка полученной локации и вывод текущей погоды на экран
+bot.on('location', async (ctx) => {
+  const { latitude, longitude } = ctx.message.location; // после запроса у пользователя мы получаем объект location
+  // console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+  // ctx.reply(`Your location: ${latitude}, ${longitude}`);
+
+  const weatherRequest = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${config.get('WEATHER_KEY')}`
+
+  const response = await axios.get(weatherRequest);
+  ctx.reply(`Город: ${response.data.name}
+  ситуация на улице: ${response.data.weather[0].description}
+  температура: ${response.data.main.temp} °C
+  влажность: ${response.data.main.humidity} %
+  давление: ${response.data.main.pressure} %`);
+
+});
 
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
