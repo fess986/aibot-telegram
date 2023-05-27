@@ -6,64 +6,74 @@ import axios from "axios";
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
-import { roles, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT } from './context.js'
+import { roles, botCommands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT,  } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
-bot.start((ctx) => {
-  ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
+bot.start(async (ctx) => {
+  ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION)) 
+  await ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
 });
 
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
-// bot.use((ctx, next) => {
-//   // получаем текущую дату и время
-//   const currentDate = new Date();
-//   console.log(currentDate)
-//   // сохраняем дату и время в сессионное хранилище
-//   ctx.session.currentDate = currentDate;
-//   // передаем управление следующему обработчику
-//   next();
-// });
-
-// прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата
+// прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
 bot.use((ctx, next) => {
-  const currentDate = new Date();
-  // console.log(currentDate);
-  // Проверяем существует ли объект ctx.session
-  if (!ctx.session) {
+  const currentDate = new Date(); // получаем текущую дату и время
+
+  if (!ctx.session) { // Проверяем существует ли объект ctx.session
     ctx.session = {};
   }
-  ctx.session.currentDate ??= currentDate;
-  //console.log(ctx.session.currentDate);
-  next();
+  ctx.session.currentDate ??= currentDate; // сохраняем дату и время в сессионное хранилище
+  ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
+  ctx.session.messages.push({
+    role: roles.SYSTEM, 
+    content: `Системное время: ${currentDate}` 
+  })
+
+  next(); // передаем управление следующему обработчику
 });
 
-//  прописываем то, что при получении комманды "/start" - телеграм бот должен будет нам ответить сообщением-объектом ctx.message. П.С. command - это именно комманды бота
-bot.command('start', async (ctx) => {
-  ctx.session = JSON.parse(JSON.stringify(INIT_SESSION)) // глубокое клонирование
-  // console.log(ctx.session.messages)
-  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате')
-})  
+const newSession = async (ctx) => {
+  ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
+  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+}
 
+const contentMax = (ctx) => {
 
+  ctx.session.messages.push(CONTEXT_MAX);
+  ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" })
+
+}
+
+const rebootBot = (ctx) => {
+  bot.stop();
+  ctx.reply(`<b>Бот перезапускается, текущая сессия обнуляется</b>`, { parse_mode: "HTML" })
+  console.log('перезапуск бота')
+  ctx.session = null;
+  bot.launch();
+}
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
-bot.command('new', async (ctx) => {
+bot.command(`${botCommands.new}`, async (ctx) => {
   // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
   // ctx.session = Object.assign({}, INIT_SESSION) // поверхностное клонирование,  нам не подходит так как там вложенные объекты
   // ctx.session = structuredClone(INIT_SESSION); // стандартная функция в ноде версии 17+. Так как у нас 16, нельзя использовать
   // ctx.session = cloneDeep(INIT_SESSION); // лодэш как то странно работает с нодой
-  ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
   // console.log(ctx.session.messages)
-  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+
+  // так в итоге работает
+  // ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
+  // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+
+  newSession(ctx);
 })
 
-bot.command('max', async (ctx) => {
-  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
-  ctx.session.messages.push(CONTEXT_MAX);
+bot.command(`${botCommands.contextMax}`, async (ctx) => {
+
+  contentMax(ctx);
 
   // вариант если мы достаем текущее время из контекста. На данный момент вместо этого мы используем время, которое в миддлвеире прописываем в сессию - ctx.session.currentDate
 
@@ -78,57 +88,30 @@ bot.command('max', async (ctx) => {
   // const messageDate = new Date(ctx.message.date * 1000);
   // const formattedDate = `${messageDate.getDate()} ${getMonthName(messageDate)} ${messageDate.getFullYear()} года. Время ${messageDate.getHours()} часов, ${messageDate.getMinutes()} минут`;
 
-  ctx.session.messages.push({
-    role: roles.USER, 
-    content: `Время, которое мы будем использовать в текущей беседе - ${ctx.session.currentDate}, то есть, если я спрошу, какое сейчас время, в ответе руководствуйся этими данными. При этом отсчитывай время отталкиваясь от этой минуты, чтобы получать актуальное время в контексте нашего общения`,
-  });
-  console.log(ctx.session.messages);
+  // ctx.session.messages.push({
+  //   role: roles.USER, 
+  //   content: `Время, которое мы будем использовать в текущей беседе - ${ctx.session.currentDate}, то есть, если я спрошу, какое сейчас время, в ответе руководствуйся этими данными. При этом отсчитывай время отталкиваясь от этой минуты, чтобы получать актуальное время в контексте нашего общения`,
+  // });
+  // console.log(ctx.session.messages);
 })
 
-bot.command('prog', async (ctx) => {
-  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
+bot.command(`${botCommands.contextProg}`, async (ctx) => {
   ctx.session.messages.push(CONTEXT_PROGRAMMER);
-  console.log(ctx.session.messages);
+  ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, { parse_mode: "HTML" })
+
 })
 
-bot.command('bot', async (ctx) => {
-  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION));
+bot.command(`${botCommands.contextBot}`, async (ctx) => {
   ctx.session.messages.push(CONTEXT_CHAT_BOT);
-  console.log(ctx.session.messages);
+  ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, { parse_mode: "HTML" })
 })
 
-bot.command('reload', (ctx) => {
-
-  bot.stop();
-  bot.launch();
-
+bot.command(`${botCommands.reload}`, (ctx) => {
+  rebootBot(ctx);
 })
-
-// для того чтобы получить координаты пользователя, нам необходимо запросить у бота доступ к геолокации.
-// bot.command('w', (ctx) => {
-//   // Отправляем запрос на получение местоположения
-//   ctx.reply('Please share your location', {
-//     // добавляем кнопку для запроса местоположения
-//     reply_markup: { // используется для настройки клавиатуры, которая будет отображаться пользователю, принимает в себя keyboard и другие настройки
-//       keyboard: [ // массив массивов с объектами, которые будут отображаться на клавиатуре
-//         [
-//           {
-//             text: 'Share location',
-//             request_location: true, // запрашивает у пользователя разрешение на использование его местоположения, если он нажмет на эту кнопку
-//             selective: true,
-//           },
-//         ],
-//       ],
-//       selective: true,
-//       resize_keyboard: true, // логическая настройка, которая позволяет изменять размер клавиатуры (true/false)
-//       one_time_keyboard: true, // логическая настройка, которая позволяет удалять клавиатуру после ее использования (true/false)
-//       remove_keyboard: true,
-//     },
-//   });
-// });
 
 // запрос погоды
-bot.command('w', (ctx) => {
+bot.command(`${botCommands.weather}`, (ctx) => {
   // Отправляем запрос на получение местоположения
   ctx.reply('Пожалуйста, поделитесь своим местоположением для того чтобы узнать прогноз погоды', {
     // добавляем кнопку для запроса местоположения
@@ -160,9 +143,11 @@ bot.command('w', (ctx) => {
 
 // Обработка полученной локации и вывод текущей погоды на экран
 bot.on('location', async (ctx) => {
+
+  try{
+
   const { latitude, longitude } = ctx.message.location; // после запроса у пользователя мы получаем объект location
   // console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-  // ctx.reply(`Your location: ${latitude}, ${longitude}`);
 
   const weatherRequest = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${config.get('WEATHER_KEY')}`
 
@@ -171,21 +156,20 @@ bot.on('location', async (ctx) => {
   ситуация на улице: ${response.data.weather[0].description}
   температура: ${response.data.main.temp} °C
   влажность: ${response.data.main.humidity} %
-  давление: ${response.data.main.pressure} %`);
+  давление: ${response.data.main.pressure} мм.рт.ст.`);
+
+  } catch(e) {
+    console.log('Ошибка запроса погоды:', e.message);
+  }
 
 });
 
+///////////////////////////////////////////////////////////
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
-  ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
-  
- // console.log(ctx.session.currentDate);
+
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
-
-  if (!ctx.session.messages) {
-    ctx.session.messages = [];
-  }
 
   ctx.session.messages.push({role: roles.USER, content: ctx.message.text});
 
@@ -197,21 +181,14 @@ try {
   })
 
   await ctx.reply(response.content);
-
   console.log(ctx.session.messages)
-
-  // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок
 
 } catch(err) {
   if (err) {
    await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
    console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
    // перезапускаем бота при ошибке и обнуляем контекст общения 
-   bot.stop();
-   // console.log(INIT_SESSION)
-   console.log(ctx.session) // будем выводить контекст в консоль чтобы анализировать из за чего мог зависнуть бот
-   ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
-   bot.launch();
+   rebootBot(ctx);
   } else {
     await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
     console.log('Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat')
@@ -219,9 +196,9 @@ try {
 }
   }) 
 
+  /////////////////////////////////////////////// голос
   bot.on(message('voice'), async (ctx) => {
-    ctx.session ??= JSON.parse(JSON.stringify(INIT_SESSION))
-    // console.log(ctx.session.messages)
+
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
   
@@ -234,12 +211,30 @@ try {
   // работаем с аи
   const text = await openAi.transcription(mp3Path);
   await ctx.reply(code(`Ваш запрос таков: ${text}`));
-  
-  // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
 
-  if (!ctx.session.messages) {
-    ctx.session.messages = [];
+  const firstWord = text.split(' ')[0];
+  const secondWord = text.split(' ')[1] ;
+  console.log(firstWord);
+  console.log(secondWord);
+
+  await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
+
+  if (firstWord.toLowerCase().startsWith('команд')) {
+    console.log('ass');
+
+    if (secondWord) {
+
+      if (secondWord.toLowerCase().startsWith('новая')) {
+        ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
+        await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения.')
+        console.log('новая');
+      } 
+    }
+
+    return;
   }
+
+  // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
   
   ctx.session.messages.push({role: roles.USER, content: text});
   
@@ -260,16 +255,11 @@ try {
   
   // console.log(link); // тут мы понимаем, что стринглифай немного неправильно приводит объект к строке. на самом деле это действительно полноценный объект с полем href которое нас будет интересовать в дальнейшем
   // console.log(link.href); // именно эта ссылка нам будет нужна
-
-  // throw new Error("500 Internal Server Error"); // для проверки отработки ошибок
   
   } catch(err) {
     if (err) {
 
-      bot.stop();
-      // console.log(INIT_SESSION)
-      ctx.session = JSON.parse(JSON.stringify(INIT_SESSION));
-      bot.launch();
+      rebootBot(ctx);
 
       await ctx.reply(`Ошибка работы с голосовым чатом аи, текст ошибки: ${err.message}`)
       console.log('Ошибка работы с голосовым чатом аи, текст ошибки: ', err.message)
@@ -282,7 +272,9 @@ try {
     }) 
 
 bot.launch();
+
 // nodemon({ script: bot.launch(), exitcrash: true }); // перезапуск через nodemon. Работает криво
 
-process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условиям
-process.once('SIGTERM', () => bot.stop('SIGTERM')); // остановка бота по условиям
+// прерывания нужны для адекватного "мягкого" завершения работы бота при получении от системы или пользователя соответствующих запросов. process.once - обрабатывает эти запросы, а коллбэк завершает работу бота () => bot.stop('SIGINT')
+process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условию Signal Interrupt - прерыванию процесса, например пользователем ctrl+c.
+process.once('SIGTERM', () => bot.stop('SIGTERM')); // (Signal Terminate) остановка бота по завершению работы, например от системы 
