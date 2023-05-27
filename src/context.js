@@ -4,10 +4,19 @@ export const roles = {
   SYSTEM: 'system',
 }
 
-export const INIT_SESSION = {
-  messages: []
+// константы комманд бота
+export const botCommands = {
+
+  new: 'new', // новая сессия
+  reload: 'reload', // перезагрузка бота
+
+  contextMax: 'max', // контекст максима
+  contextBot : 'bot', // контекст программирования бота
+  contextProg: 'prog', // контекст программиста JS и TS
+
 }
 
+export const INIT_SESSION = []
 
 export const CONTEXT_MAX = {
   role: roles.USER, 
