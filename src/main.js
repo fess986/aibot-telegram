@@ -6,7 +6,7 @@ import axios from "axios";
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
-import { roles, botCommands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT,  } from './context.js'
+import { roles, botComands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT,  } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -36,28 +36,36 @@ bot.use((ctx, next) => {
   next(); // передаем управление следующему обработчику
 });
 
-const newSession = async (ctx) => {
-  ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
-  await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
-}
+const comandList = {
 
-const contentMax = (ctx) => {
+  async newSession(ctx) {
+    ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
+    await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+  },
 
-  ctx.session.messages.push(CONTEXT_MAX);
-  ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" })
+  contentMax(ctx) {
+    ctx.session.messages.push(CONTEXT_MAX);
+    ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" })
+  },
 
-}
-
-const rebootBot = (ctx) => {
+  rebootBot(ctx) {
   bot.stop();
   ctx.reply(`<b>Бот перезапускается, текущая сессия обнуляется</b>`, { parse_mode: "HTML" })
   console.log('перезапуск бота')
   ctx.session = null;
   bot.launch();
-}
+},
+
+  }
+
+
+
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
-bot.command(`${botCommands.new}`, async (ctx) => {
+bot.command(`${botComands.new}`, async (ctx) => {
+
+  comandList.newSession(ctx)
+
   // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
   // ctx.session = Object.assign({}, INIT_SESSION) // поверхностное клонирование,  нам не подходит так как там вложенные объекты
   // ctx.session = structuredClone(INIT_SESSION); // стандартная функция в ноде версии 17+. Так как у нас 16, нельзя использовать
@@ -68,12 +76,11 @@ bot.command(`${botCommands.new}`, async (ctx) => {
   // ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
   // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 
-  newSession(ctx);
 })
 
-bot.command(`${botCommands.contextMax}`, async (ctx) => {
+bot.command(`${botComands.contextMax}`, async (ctx) => {
 
-  contentMax(ctx);
+  comandList.contentMax(ctx);
 
   // вариант если мы достаем текущее время из контекста. На данный момент вместо этого мы используем время, которое в миддлвеире прописываем в сессию - ctx.session.currentDate
 
@@ -95,24 +102,23 @@ bot.command(`${botCommands.contextMax}`, async (ctx) => {
   // console.log(ctx.session.messages);
 })
 
-bot.command(`${botCommands.contextProg}`, async (ctx) => {
+bot.command(`${botComands.contextProg}`, async (ctx) => {
   ctx.session.messages.push(CONTEXT_PROGRAMMER);
   ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, { parse_mode: "HTML" })
 
 })
 
-bot.command(`${botCommands.contextBot}`, async (ctx) => {
+bot.command(`${botComands.contextBot}`, async (ctx) => {
   ctx.session.messages.push(CONTEXT_CHAT_BOT);
   ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, { parse_mode: "HTML" })
 })
 
-bot.command(`${botCommands.reload}`, (ctx) => {
-  rebootBot(ctx);
+bot.command(`${botComands.reload}`, (ctx) => {
+  comandList.rebootBot(ctx);
 })
 
-// запрос погоды
-bot.command(`${botCommands.weather}`, (ctx) => {
-  // Отправляем запрос на получение местоположения
+const weatherRequest = (ctx) => {
+   // Отправляем запрос на получение местоположения
   ctx.reply('Пожалуйста, поделитесь своим местоположением для того чтобы узнать прогноз погоды', {
     // добавляем кнопку для запроса местоположения
     reply_markup: { 
@@ -139,7 +145,7 @@ bot.command(`${botCommands.weather}`, (ctx) => {
       });
     }, 10000); // Задержка в 5 секунд
   });
-});
+};
 
 // Обработка полученной локации и вывод текущей погоды на экран
 bot.on('location', async (ctx) => {
@@ -161,7 +167,12 @@ bot.on('location', async (ctx) => {
   } catch(e) {
     console.log('Ошибка запроса погоды:', e.message);
   }
+})
 
+
+// запрос погоды
+bot.command(`${botComands.weather}`, (ctx) => {
+ weatherRequest(ctx)
 });
 
 ///////////////////////////////////////////////////////////
@@ -188,7 +199,7 @@ try {
    await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
    console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
    // перезапускаем бота при ошибке и обнуляем контекст общения 
-   rebootBot(ctx);
+   comandList.rebootBot(ctx);
   } else {
     await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
     console.log('Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat')
@@ -217,20 +228,28 @@ try {
   console.log(firstWord);
   console.log(secondWord);
 
-  await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
+  // await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
-  if (firstWord.toLowerCase().startsWith('команд')) {
+  if (firstWord.toLowerCase().startsWith('контекст')) {
     console.log('ass');
 
     if (secondWord) {
 
-      if (secondWord.toLowerCase().startsWith('новая')) {
-        ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
-        await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения.')
-        console.log('новая');
+      if (secondWord.toLowerCase().startsWith('макс')) {
+        comandList.contentMax(ctx);
       } 
+
+      if (secondWord.toLowerCase().startsWith('нов')) {
+        comandList.newSession(ctx);
+      } 
+
     }
 
+    return;
+  }
+
+  if (firstWord.toLowerCase().startsWith('погода')) {
+    weatherRequest(ctx)
     return;
   }
 
@@ -259,7 +278,7 @@ try {
   } catch(err) {
     if (err) {
 
-      rebootBot(ctx);
+      comandList.rebootBot(ctx);
 
       await ctx.reply(`Ошибка работы с голосовым чатом аи, текст ошибки: ${err.message}`)
       console.log('Ошибка работы с голосовым чатом аи, текст ошибки: ', err.message)

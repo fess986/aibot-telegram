@@ -5,7 +5,7 @@ export const roles = {
 }
 
 // константы комманд бота
-export const botCommands = {
+export const botComands = {
 
   new: 'new', // новая сессия
   reload: 'reload', // перезагрузка бота
@@ -13,6 +13,7 @@ export const botCommands = {
   contextMax: 'max', // контекст максима
   contextBot : 'bot', // контекст программирования бота
   contextProg: 'prog', // контекст программиста JS и TS
+  weather: 'w',
 
 }
 
