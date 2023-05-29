@@ -1,6 +1,7 @@
 .idea
 node_modules
 voices
+records
 config/default.json
 config/production.json
 .vscode

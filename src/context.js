@@ -13,7 +13,8 @@ export const botComands = {
   contextMax: 'max', // контекст максима
   contextBot : 'bot', // контекст программирования бота
   contextProg: 'prog', // контекст программиста JS и TS
-  weather: 'w',
+  weather: 'w', // текущая погода
+  record: 'record', // запись сообщения в файл
 
 }
 
