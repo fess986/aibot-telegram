@@ -6,6 +6,8 @@ import axios from "axios";
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
+import {files} from './files.js'
+
 import { roles, botComands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT,  } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
@@ -26,7 +28,7 @@ bot.use((ctx, next) => {
   if (!ctx.session) { // Проверяем существует ли объект ctx.session
     ctx.session = {};
   }
-  ctx.session.currentDate ??= currentDate; // сохраняем дату и время в сессионное хранилище
+  ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
   ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
   ctx.session.messages.push({
     role: roles.SYSTEM, 
@@ -46,6 +48,14 @@ const comandList = {
   contentMax(ctx) {
     ctx.session.messages.push(CONTEXT_MAX);
     ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" })
+
+    const user = ctx.message.from.last_name;
+    const time = ctx.session.currentDate;
+    const theme = 'myTheme';
+    const data = 'мой крутой текст';
+
+    files.writeRecord(user, time, theme, data)
+
   },
 
   rebootBot(ctx) {
@@ -75,6 +85,21 @@ bot.command(`${botComands.new}`, async (ctx) => {
   // так в итоге работает
   // ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
   // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+
+})
+
+// команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
+bot.command(`${botComands.record}`, async (ctx) => {
+  console.log(ctx.message.text)
+  const text = ctx.message.text;
+
+  const [,theme, ...rest] = text.split(' ');
+  const data = rest.join(' ');
+
+  const user = ctx.message.from.last_name;
+  const time = ctx.session.currentDate;
+
+  files.writeRecord(user, time, theme, data)
 
 })
 
@@ -223,15 +248,17 @@ try {
   const text = await openAi.transcription(mp3Path);
   await ctx.reply(code(`Ваш запрос таков: ${text}`));
 
-  const firstWord = text.split(' ')[0];
-  const secondWord = text.split(' ')[1] ;
-  console.log(firstWord);
-  console.log(secondWord);
+  const splitedText = text.split(' ');
+  const [firstWord, secondWord, thirdWord, forthWord] = splitedText;
+
+  // console.log(firstWord);
+  // console.log(secondWord);
+  // console.log(thirdWord);
+  // console.log(forthWord);
 
   // await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
   if (firstWord.toLowerCase().startsWith('контекст')) {
-    console.log('ass');
 
     if (secondWord) {
 
@@ -250,6 +277,21 @@ try {
 
   if (firstWord.toLowerCase().startsWith('погода')) {
     weatherRequest(ctx)
+    return;
+  }
+
+  // запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...". 
+  if (firstWord.toLowerCase().startsWith('запись')) {
+
+      const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+      const theme = forthWord.match(pattern)[0].toLowerCase();
+      const user = ctx.message.from.last_name;
+      const time = ctx.session.currentDate;
+
+      files.writeRecord(user, time, theme, text);
+
+      ctx.reply(`Ваша запись сохранена в папке <b>${theme}</b>`, { parse_mode: "HTML" })
+
     return;
   }
 
