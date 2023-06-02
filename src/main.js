@@ -1,14 +1,15 @@
-import { Telegraf, session } from 'telegraf'; // для работы с ботом телеграмма
+import { Telegraf, session, Markup, Input } from 'telegraf'; // для работы с ботом телеграмма
 import { message } from 'telegraf/filters' // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 import axios from "axios";
+import { createReadStream } from 'fs'
 
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
 import {files} from './files.js'
 
-import { roles, botComands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT,  } from './context.js'
+import { roles, botComands, INIT_SESSION, CONTEXT_MAX, CONTEXT_PROGRAMMER, CONTEXT_CHAT_BOT, helpMessage } from './context.js'
 
 console.log(config.get("TEST"));  // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -18,6 +19,83 @@ bot.start(async (ctx) => {
   ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION)) 
   await ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
 });
+
+bot.help((ctx) => {
+  ctx.reply(helpMessage);
+})
+
+// тестируем работу с кнопками. Для того чтобы всё выполнялось по порядку, делаем функцию асинхронной и потом при помощи await ожидаем выполнение очередной задачи. При этом не забываем трай-кэтч при любой асинхронщине, чтобы не крашить бота при асинхронной ошибке
+bot.command(botComands.contextButtons, async (ctx) => {
+
+  try {
+    await ctx.replyWithHTML('<b>Добавление контекста:</b>', Markup.inlineKeyboard(
+        [
+          [Markup.button.callback('Макс', 'max'), Markup.button.callback('Программист JS', 'programmist'), Markup.button.callback('Пишем бота', 'bot')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
+          [Markup.button.callback('Новый контекст!', 'new')]
+        ]
+  ))
+
+  bot.action('max', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.contentMax(ctx)
+  })
+
+  bot.action('programmist', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.contentProg(ctx)
+  })
+
+  bot.action('bot', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.contentBot(ctx)
+  })
+
+  bot.action('new', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.newSession(ctx)
+  })
+
+  // buttonHandlers('btn1', false, 'первая кнопка');
+  } catch(err) {
+    console.log('ошибка работы с кнопками контекста', err)
+  }
+})
+
+bot.command(botComands.manageButtons, async (ctx) => {
+
+  try {
+    await ctx.replyWithHTML('<b>Управление функциями бота:</b>', Markup.inlineKeyboard(
+        [
+          [Markup.button.callback('Перезагрузка бота', 'reload'), Markup.button.callback('Новый контекст', 'new')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
+          [Markup.button.callback('Текущая погода', 'weather')],
+          [Markup.button.callback('Создать картинку по описанию', 'createImage')],
+        ]
+  ))
+
+  bot.action('reload', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.rebootBot(ctx)
+  })
+
+  bot.action('weather', async (ctx) => {
+    await ctx.answerCbQuery();
+    weatherRequest(ctx);
+  })
+
+  bot.action('new', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.newSession(ctx)
+  })
+
+  bot.action('createImage', async (ctx) => {
+    await ctx.answerCbQuery();
+    comandList.createImage(ctx);
+  })
+
+  } catch(err) {
+    console.log('ошибка работы с кнопками управления', err)
+  }
+})
 
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
@@ -35,8 +113,26 @@ bot.use((ctx, next) => {
     content: `Системное время: ${currentDate}` 
   })
 
+  // ctx.session.askImageDiscription = true;
+
   next(); // передаем управление следующему обработчику
 });
+
+// обработка того, задан ли вопрос пользователю
+bot.use(async (ctx, next) => {
+
+  if (ctx.session.askImageDiscription === true) {
+    // ctx.session.imageDescription = ctx.message.text;
+    await ctx.replyWithHTML(`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, поождите немного... `);
+
+    const url = await openAi.image(ctx.message.text);
+
+    await ctx.replyWithPhoto(Input.fromURL(url)); // используем специальный объект Input для того чтобы не было проблем с загрузкой картинки по url
+  
+  }
+
+  next()
+})
 
 const comandList = {
 
@@ -48,14 +144,16 @@ const comandList = {
   contentMax(ctx) {
     ctx.session.messages.push(CONTEXT_MAX);
     ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" })
+  },
 
-    const user = ctx.message.from.last_name;
-    const time = ctx.session.currentDate;
-    const theme = 'myTheme';
-    const data = 'мой крутой текст';
+  contentProg(ctx) {
+    ctx.session.messages.push(CONTEXT_PROGRAMMER);
+    ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, { parse_mode: "HTML" })
+  },
 
-    files.writeRecord(user, time, theme, data)
-
+  contentBot(ctx) {
+    ctx.session.messages.push(CONTEXT_CHAT_BOT);
+    ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, { parse_mode: "HTML" })
   },
 
   rebootBot(ctx) {
@@ -66,9 +164,12 @@ const comandList = {
   bot.launch();
 },
 
+  createImage(ctx) {
+    ctx.reply('Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке...')
+    ctx.session.askImageDiscription = true
   }
 
-
+  }
 
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
@@ -104,42 +205,23 @@ bot.command(`${botComands.record}`, async (ctx) => {
 })
 
 bot.command(`${botComands.contextMax}`, async (ctx) => {
-
   comandList.contentMax(ctx);
-
-  // вариант если мы достаем текущее время из контекста. На данный момент вместо этого мы используем время, которое в миддлвеире прописываем в сессию - ctx.session.currentDate
-
-  // function getMonthName(date) {
-  //   const monthNames = [
-  //     'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
-  //     'июля', 'августа', 'сентября', 'октября', 'ноября', 'декабря',
-  //   ];
-  //   return monthNames[date.getMonth()];
-  // }
-
-  // const messageDate = new Date(ctx.message.date * 1000);
-  // const formattedDate = `${messageDate.getDate()} ${getMonthName(messageDate)} ${messageDate.getFullYear()} года. Время ${messageDate.getHours()} часов, ${messageDate.getMinutes()} минут`;
-
-  // ctx.session.messages.push({
-  //   role: roles.USER, 
-  //   content: `Время, которое мы будем использовать в текущей беседе - ${ctx.session.currentDate}, то есть, если я спрошу, какое сейчас время, в ответе руководствуйся этими данными. При этом отсчитывай время отталкиваясь от этой минуты, чтобы получать актуальное время в контексте нашего общения`,
-  // });
-  // console.log(ctx.session.messages);
 })
 
 bot.command(`${botComands.contextProg}`, async (ctx) => {
-  ctx.session.messages.push(CONTEXT_PROGRAMMER);
-  ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, { parse_mode: "HTML" })
-
+  comandList.contentProg(ctx);
 })
 
 bot.command(`${botComands.contextBot}`, async (ctx) => {
-  ctx.session.messages.push(CONTEXT_CHAT_BOT);
-  ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, { parse_mode: "HTML" })
+  comandList.contentBot(ctx);
 })
 
 bot.command(`${botComands.reload}`, (ctx) => {
   comandList.rebootBot(ctx);
+})
+
+bot.command(`${botComands.image}`, (ctx) => {
+  comandList.createImage(ctx);
 })
 
 const weatherRequest = (ctx) => {
@@ -204,6 +286,13 @@ bot.command(`${botComands.weather}`, (ctx) => {
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
 
+
+  if (ctx.session.askImageDiscription === true) {
+    ctx.session.askImageDiscription = false;
+    console.log('ass')
+    return
+  }
+
 try {
   await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
@@ -217,7 +306,8 @@ try {
   })
 
   await ctx.reply(response.content);
-  console.log(ctx.session.messages)
+  console.log('текст обработан аи...')
+  // console.log(ctx.session.messages)
 
 } catch(err) {
   if (err) {
@@ -250,11 +340,6 @@ try {
 
   const splitedText = text.split(' ');
   const [firstWord, secondWord, thirdWord, forthWord] = splitedText;
-
-  // console.log(firstWord);
-  // console.log(secondWord);
-  // console.log(thirdWord);
-  // console.log(forthWord);
 
   // await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
