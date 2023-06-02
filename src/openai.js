@@ -42,6 +42,20 @@ class openAI {
     }
   }
 
+  async image(text) {
+    try {
+      const response = await this.openai.createImage({
+        prompt: text,
+        size: '256x256',
+        n: 1,
+      });
+      return response.data.data[0].url;
+      // console.log(response.data.data)
+    } catch(err) {
+      console.log('ошибка при создании изображения', err.message)
+    }
+  }
+
 }
 
 export const openAi = new openAI(config.get('OPENAI_KEY'));
