@@ -69,6 +69,7 @@ bot.command(botComands.manageButtons, async (ctx) => {
           [Markup.button.callback('Перезагрузка бота', 'reload'), Markup.button.callback('Новый контекст', 'new')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
           [Markup.button.callback('Текущая погода', 'weather')],
           [Markup.button.callback('Создать картинку по описанию', 'createImage')],
+          [Markup.button.callback('Создать запись', 'createRecord')],
         ]
   ))
 
@@ -90,6 +91,11 @@ bot.command(botComands.manageButtons, async (ctx) => {
   bot.action('createImage', async (ctx) => {
     await ctx.answerCbQuery();
     comandList.createImage(ctx);
+  })
+
+  bot.action('createRecord', async (ctx) => {
+    ctx.reply('Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальныеслова - текст записи.')
+    ctx.session.askRecordText = true
   })
 
   } catch(err) {
@@ -118,7 +124,7 @@ bot.use((ctx, next) => {
   next(); // передаем управление следующему обработчику
 });
 
-// обработка того, задан ли вопрос пользователю
+// обработка того, задан ли вопрос пользователю по поводу описания картинки
 bot.use(async (ctx, next) => {
 
   if (ctx.session.askImageDiscription === true) {
@@ -133,6 +139,31 @@ bot.use(async (ctx, next) => {
 
   next()
 })
+
+// обработка того, задан ли вопрос пользователю по поводу записи текста
+bot.use(async (ctx, next) => {
+
+  if (ctx.session.askRecordText === true) {
+    
+    const text = ctx.message.text;
+    const [themeWithSigns, ...rest] = text.split(' ');
+
+    const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+    const theme = themeWithSigns.match(pattern)[0].toLowerCase();
+
+    const data = rest.join(' ');
+    const user = ctx.message.from.last_name;
+    const time = ctx.session.currentDate;
+    
+    await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
+
+  files.writeRecord(user, time, theme, data);
+
+  }
+
+  next()
+})
+
 
 const comandList = {
 
@@ -191,17 +222,21 @@ bot.command(`${botComands.new}`, async (ctx) => {
 
 // команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
 bot.command(`${botComands.record}`, async (ctx) => {
-  console.log(ctx.message.text)
+
   const text = ctx.message.text;
 
-  const [,theme, ...rest] = text.split(' ');
-  const data = rest.join(' ');
+  const [,themeWithSigns, ...rest] = text.split(' ');
 
+  const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+  const theme = themeWithSigns.match(pattern)[0].toLowerCase();
+
+  const data = rest.join(' ');
   const user = ctx.message.from.last_name;
   const time = ctx.session.currentDate;
 
-  files.writeRecord(user, time, theme, data)
+  files.writeRecord(user, time, theme, data);
 
+  await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
 })
 
 bot.command(`${botComands.contextMax}`, async (ctx) => {
@@ -287,9 +322,9 @@ bot.command(`${botComands.weather}`, (ctx) => {
 bot.on(message('text'), async (ctx) => {
 
 
-  if (ctx.session.askImageDiscription === true) {
+  if ((ctx.session.askImageDiscription === true) || ( ctx.session.askRecordText === true) )  {
     ctx.session.askImageDiscription = false;
-    console.log('ass')
+    ctx.session.askRecordText = false;
     return
   }
 
@@ -375,7 +410,7 @@ try {
 
       files.writeRecord(user, time, theme, text);
 
-      ctx.reply(`Ваша запись сохранена в папке <b>${theme}</b>`, { parse_mode: "HTML" })
+      ctx.reply(`Ваша запись <b>${text}</b> сохранена в папке <b>${theme}</b>`, { parse_mode: "HTML" })
 
     return;
   }
