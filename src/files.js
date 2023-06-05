@@ -1,4 +1,5 @@
-import {writeFile, existsSync, mkdirSync} from 'fs';
+import {writeFile, existsSync, mkdirSync, createWriteStream} from 'fs';
+import archiver from 'archiver';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -32,7 +33,7 @@ class Files {
     }
 
     // формируем имя файла, исходя из текущего времени
-    const month = String(time.getMonth()).length === 1 ? '0' + String(time.getMonth()) : String(time.getMonth())
+    const month = String(time.getMonth() + 1).length === 1 ? '0' + String(time.getMonth() + 1) : String(time.getMonth() + 1)
 
     const day = String(time.getDate()).length === 1 ? '0' + String(time.getDate()) : String(time.getDate());
 
@@ -56,7 +57,69 @@ class Files {
   } catch(err) {
     console.log('ошибка записи файла');
   }
+  }
 
+  areRecordsExists(user) {
+
+    const folderPath = path.join(__dirname, '../', 'records', user);
+
+      if (!existsSync(folderPath)) {
+        console.log('У вас нет ни одной записи!');
+        return false
+      } else {
+        return true
+      }
+  }
+
+  recordsPath(user) {
+    const folderPath = path.join(__dirname, '../', 'records', user);
+    return folderPath;
+  }
+
+  async archiveRecords(user) {
+    try {
+
+      const recordsExist = this.areRecordsExists(user);
+
+      const folderPath = this.recordsPath(user); 
+
+      if (!recordsExist) {
+        console.log('У вас нет ни одной записи!');
+        return
+      }
+
+      const zipFilename = path.join(folderPath, '../', `${user}.zip`)
+
+      const output = createWriteStream(zipFilename);
+      const archive = archiver('zip', { zlib: { level: 9 } });
+
+      return new Promise((resolve) => {
+        output.on('close', () => {
+        console.log(`${zipFilename} created: ${archive.pointer()} total bytes`);
+        resolve(zipFilename)
+      });
+
+      archive.on('warning', (err) => {
+        if (err.code === 'ENOENT') {
+          console.warn('Warning', err);
+        } else {
+          throw err;
+        }
+      });
+
+      archive.on('error', (err) => {
+        throw err;
+      });
+
+      archive.pipe(output);
+      archive.directory(folderPath, false);
+      archive.finalize();
+
+    })
+
+    } catch(err) {
+      console.log('ошибка архивирования папки', err.message)
+    }
 
   }
 
@@ -68,3 +131,4 @@ class Files {
 }
 
 export const files = new Files()
+
