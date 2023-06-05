@@ -28,8 +28,12 @@ export const botComands = {
   contextProg: 'prog', // контекст программиста JS и TS
   
   weather: 'w', // текущая погода
-  record: 'r', // запись сообщения в файл
   image: 'i', // рисование картинок по запросу пользователя. Для экономии ресурсов будем рисовать только по одной картинке с разрешением 256х256
+  
+  record: 'r', // запись сообщения в файл
+  sendRecords: 's', // отправить архив с текущими записями пользователя
+  removeRecords: 'rr', // удалить записи пользователя
+
 
   contextButtons: 'c', // меню с добавлением контекста общения
   manageButtons: 'b', // меню с управлением приложением
@@ -50,8 +54,9 @@ export const CONTEXT_PROGRAMMER = {
 
 export const CONTEXT_CHAT_BOT = {
   role: roles.USER, 
-  content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs , 
-  вот так выглядит инициализация бота:
+  content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs в package.json используется "type": "module", "telegraf": "^4.12.2", "openai": "^3.2.1". Версия node: v16.19.0
+
+  Так выглядит инициализация бота:
   import { Telegraf, session } from 'telegraf';
   const bot2 = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
@@ -65,7 +70,7 @@ export const CONTEXT_CHAT_BOT = {
   бот умеет работать с сессиями и сохраняет весь контекст входных данных и ответов аи. 
   bot.use(session());
 
-  нужна помощь для развития бота.
+  нужна помощь для написания кода для бота.
   `}
 
 

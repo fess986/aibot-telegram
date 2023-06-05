@@ -3,8 +3,8 @@ import { message } from 'telegraf/filters' // помогает работать 
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 import axios from "axios";
-import { createReadStream } from 'fs'
 
+import {deleteFolderRecursive} from './utils.js'
 import { ogg } from './oggToMp3.js' 
 import { openAi } from './openai.js';
 import {files} from './files.js'
@@ -70,6 +70,8 @@ bot.command(botComands.manageButtons, async (ctx) => {
           [Markup.button.callback('Текущая погода', 'weather')],
           [Markup.button.callback('Создать картинку по описанию', 'createImage')],
           [Markup.button.callback('Создать запись', 'createRecord')],
+          [Markup.button.callback('Скачать записи', 'sendRecord')],
+          [Markup.button.callback('Удалить записи', 'removeRecords')],
         ]
   ))
 
@@ -94,8 +96,19 @@ bot.command(botComands.manageButtons, async (ctx) => {
   })
 
   bot.action('createRecord', async (ctx) => {
-    ctx.reply('Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальныеслова - текст записи.')
+    await ctx.answerCbQuery();
+    ctx.reply('Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальные слова - текст записи.')
     ctx.session.askRecordText = true
+  })
+
+  bot.action('sendRecord', async (ctx) => {
+    // await ctx.answerCbQuery();
+    await comandList.sendRecords(ctx);
+  })
+
+  bot.action('removeRecords', async (ctx) => {
+    await ctx.answerCbQuery();
+    await comandList.removeRecords(ctx);
   })
 
   } catch(err) {
@@ -119,10 +132,21 @@ bot.use((ctx, next) => {
     content: `Системное время: ${currentDate}` 
   })
 
-  // ctx.session.askImageDiscription = true;
+  // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
 
   next(); // передаем управление следующему обработчику
+
+  // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
 });
+
+bot.command(botComands.sendRecords, async (ctx) => {
+  console.log(ctx)
+  comandList.sendRecords(ctx)
+})
+
+bot.command(botComands.removeRecords, async (ctx) => {
+  comandList.removeRecords(ctx);
+})
 
 // обработка того, задан ли вопрос пользователю по поводу описания картинки
 bot.use(async (ctx, next) => {
@@ -148,8 +172,11 @@ bot.use(async (ctx, next) => {
     const text = ctx.message.text;
     const [themeWithSigns, ...rest] = text.split(' ');
 
+    console.log('we there')
+
     const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
-    const theme = themeWithSigns.match(pattern)[0].toLowerCase();
+
+    const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
     const data = rest.join(' ');
     const user = ctx.message.from.last_name;
@@ -198,6 +225,39 @@ const comandList = {
   createImage(ctx) {
     ctx.reply('Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке...')
     ctx.session.askImageDiscription = true
+  },
+
+  async sendRecords(ctx) {
+
+    try {
+    const user = await ctx?.message?.from?.last_name ?? ctx?.update?.callback_query?.from?.last_name ?? 'user';  // в зависимости от того, когда происходит действие, объект контекста может различаться, например если он вызывается при нажатии кнопки действия кейпада, у него не будет поля ctx.message.from , но зато будет ctx.update.callback_query.from? , поэтому мы проверяем наличие всех этих полей чтобы не схватить ошибку.
+
+    const recordsExist = files.areRecordsExists(user);
+  
+    if (!recordsExist) {
+      ctx.reply('У вас нет ни одной записи для отправки архива. Создайте её через соответствующую кнопку в меню /b , или через /r , или же через голосовое управление фразой "Запись на тему ..."');
+      return
+    }
+  
+    const arhPath = await files.archiveRecords(user); 
+    bot.telegram.sendDocument(ctx.chat.id, {
+      source: arhPath // указываем путь к файлу. Можно относительный или абсолютный
+    }, { caption: 'Архив с вашими текстовыми записями скачан' }) 
+  
+    } catch(err) {
+      console.log('Ошибка архивирования и отправки файлов', err.message);
+    }
+  },
+
+  async removeRecords(ctx) {
+    try {
+      const user = await ctx?.message?.from?.last_name ?? ctx?.update?.callback_query?.from?.last_name ?? 'user'; 
+      const recordsPath = files.recordsPath(user);
+      deleteFolderRecursive(recordsPath);
+      await ctx.replyWithHTML(`Ваша папка с записями: <b>"${user}"</b> - удалена. `);
+    } catch(err) {
+      console.log('ошибка удаления папки с вашими записями', err.message)
+    }
   }
 
   }
@@ -228,7 +288,7 @@ bot.command(`${botComands.record}`, async (ctx) => {
   const [,themeWithSigns, ...rest] = text.split(' ');
 
   const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
-  const theme = themeWithSigns.match(pattern)[0].toLowerCase();
+  const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
   const data = rest.join(' ');
   const user = ctx.message.from.last_name;
@@ -404,7 +464,7 @@ try {
   if (firstWord.toLowerCase().startsWith('запись')) {
 
       const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
-      const theme = forthWord.match(pattern)[0].toLowerCase();
+      const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
       const user = ctx.message.from.last_name;
       const time = ctx.session.currentDate;
 
