@@ -464,7 +464,7 @@ try {
   if (firstWord.toLowerCase().startsWith('запись')) {
 
       const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
-      const theme = (forthWord.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
+      const theme = (forthWord.match(pattern) !== null) ? forthWord.match(pattern)[0].toLowerCase() : 'default';
       const user = ctx.message.from.last_name;
       const time = ctx.session.currentDate;
 
