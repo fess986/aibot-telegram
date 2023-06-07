@@ -3,6 +3,7 @@ import { message } from 'telegraf/filters' // помогает работать 
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 import axios from "axios";
+import fs from 'fs';
 
 import {deleteFolderRecursive} from './utils.js'
 import { ogg } from './oggToMp3.js' 
@@ -174,7 +175,7 @@ bot.use(async (ctx, next) => {
 
     console.log('we there')
 
-    const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+    const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
 
     const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
@@ -189,6 +190,32 @@ bot.use(async (ctx, next) => {
   }
 
   next()
+})
+
+bot.command('g', async (ctx) => {
+  try {
+    ctx.reply('скачиваем контекст из гитхаба');
+    
+    const owner = 'fess986'
+    const repo = 'aibot-telegram';
+    const url = `https://api.github.com/repos/${owner}/${repo}/tarball`
+    
+    axios.get(url, {
+      responseType: 'stream',
+      headers: {
+        'accept': 'application/vnd.github.v3+json',
+        'authorization': 'Bearer [token]'
+      }
+    })
+    .then(response => {
+      response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
+    })
+
+
+  } catch(err) {
+    console.log('ошибка скачивания проекта с гитхаба', err.message);
+    ctx.reply('ошибка скачивания проекта с гитхаба', err.message);
+  }
 })
 
 
@@ -285,7 +312,7 @@ bot.command(`${botComands.record}`, async (ctx) => {
 
   const [,themeWithSigns, ...rest] = text.split(' ');
 
-  const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+  const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
   const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
   const data = rest.join(' ');
@@ -461,7 +488,7 @@ try {
   // запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...". 
   if (firstWord.toLowerCase().startsWith('запись')) {
 
-      const pattern = /[A-Za-zА-Яа-яЁё]+/g; // убираем лишние знаки из строки запроса
+      const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
       const theme = (forthWord.match(pattern) !== null) ? forthWord.match(pattern)[0].toLowerCase() : 'default';
       const user = ctx.message.from.last_name;
       const time = ctx.session.currentDate;
