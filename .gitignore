@@ -1,5 +1,7 @@
 .idea
 node_modules
+records/karpov
+records/karpov.zip
 voices
 config/default.json
 config/production.json
