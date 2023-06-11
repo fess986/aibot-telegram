@@ -58,7 +58,9 @@ bot.command(botComands.contextButtons, async (ctx) => {
 
   // buttonHandlers('btn1', false, 'первая кнопка');
   } catch(err) {
-    console.log('ошибка работы с кнопками контекста', err)
+    console.log('ошибка работы с кнопками контекста', err);
+    console.log(ctx);
+    comandList.rebootBot(ctx);
   }
 })
 
@@ -67,7 +69,7 @@ bot.command(botComands.manageButtons, async (ctx) => {
   try {
     await ctx.replyWithHTML('<b>Управление функциями бота:</b>', Markup.inlineKeyboard(
         [
-          [Markup.button.callback('Перезагрузка бота', 'reload'), Markup.button.callback('Новый контекст', 'new')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
+          [Markup.button.callback('Перезагрузка бота', 'reboot'), Markup.button.callback('Новый контекст', 'new')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
           [Markup.button.callback('Текущая погода', 'weather')],
           [Markup.button.callback('Создать картинку по описанию', 'createImage')],
           [Markup.button.callback('Создать запись', 'createRecord')],
@@ -76,7 +78,7 @@ bot.command(botComands.manageButtons, async (ctx) => {
         ]
   ))
 
-  bot.action('reload', async (ctx) => {
+  bot.action('reboot', async (ctx) => {
     await ctx.answerCbQuery();
     comandList.rebootBot(ctx)
   })
@@ -113,35 +115,45 @@ bot.command(botComands.manageButtons, async (ctx) => {
   })
 
   } catch(err) {
-    console.log('ошибка работы с кнопками управления', err)
+    console.log('ошибка работы с кнопками управления', err);
+    console.log(ctx);
+    comandList.rebootBot(ctx);
   }
 })
 
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
 // прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
-bot.use((ctx, next) => {
-  const currentDate = new Date(); // получаем текущую дату и время
+bot.use(async (ctx, next) => {
+  try {
+    const currentDate = new Date(); // получаем текущую дату и время
 
-  if (!ctx.session) { // Проверяем существует ли объект ctx.session
-    ctx.session = {};
+    if (!ctx.session) { // Проверяем существует ли объект ctx.session
+      ctx.session = {};
+    }
+    ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
+    ctx.session.messages.push({
+      role: roles.SYSTEM, 
+      content: `Системное время: ${currentDate}` 
+    })
+
+    // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
+
+    next(); // передаем управление следующему обработчику
+
+    // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
+  } catch(err) {
+    console.log('ошибка миддлвеира добавления системного времени', err.message);
+    await ctx.reply('ошибка миддлвеира добавления системного времени', err.message);
+    console.log(ctx);
+    await comandList.rebootBot(ctx);
+    next();
   }
-  ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
-  ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
-  ctx.session.messages.push({
-    role: roles.SYSTEM, 
-    content: `Системное время: ${currentDate}` 
-  })
 
-  // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
-
-  next(); // передаем управление следующему обработчику
-
-  // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
 });
 
 bot.command(botComands.sendRecords, async (ctx) => {
-  console.log(ctx)
   comandList.sendRecords(ctx)
 })
 
@@ -152,44 +164,60 @@ bot.command(botComands.removeRecords, async (ctx) => {
 // обработка того, задан ли вопрос пользователю по поводу описания картинки
 bot.use(async (ctx, next) => {
 
-  if (ctx.session.askImageDiscription === true) {
-    // ctx.session.imageDescription = ctx.message.text;
-    await ctx.replyWithHTML(`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, поождите немного... `);
+  try {
+      if (ctx?.session?.askImageDiscription === true) {
+      // ctx.session.imageDescription = ctx.message.text;
+      await ctx.replyWithHTML(`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, поождите немного... `);
 
-    const url = await openAi.image(ctx.message.text);
+      const url = await openAi.image(ctx.message.text);
 
-    await ctx.replyWithPhoto(Input.fromURL(url)); // используем специальный объект Input для того чтобы не было проблем с загрузкой картинки по url
-  
+      await ctx.replyWithPhoto(Input.fromURL(url)); // используем специальный объект Input для того чтобы не было проблем с загрузкой картинки по url
+      }
+      next()
+
+  } catch(err) {
+    console.log('ошибка миддлвеира обработки вопроса', err.message);
+    await ctx.reply('ошибка миддлвеира обработки вопроса', err.message);
+    console.log(ctx);
+    await comandList.rebootBot(ctx);
+    next();
   }
 
-  next()
+  
 })
 
 // обработка того, задан ли вопрос пользователю по поводу записи текста
 bot.use(async (ctx, next) => {
 
-  if (ctx.session.askRecordText === true) {
-    
-    const text = ctx.message.text;
-    const [themeWithSigns, ...rest] = text.split(' ');
+  try {
+    if (ctx?.session?.askRecordText === true) {
+        
+        const text = ctx.message.text;
+        const [themeWithSigns, ...rest] = text.split(' ');
 
-    console.log('we there')
+        const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
 
-    const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+        const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
-    const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
+        const data = rest.join(' ');
+        const user = ctx.message.from.last_name;
+        const time = ctx.session.currentDate;
+        
+        await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
 
-    const data = rest.join(' ');
-    const user = ctx.message.from.last_name;
-    const time = ctx.session.currentDate;
-    
-    await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
+      files.writeRecord(user, time, theme, data);
+      }
+      next()
 
-  files.writeRecord(user, time, theme, data);
-
+  } catch(err) {
+    console.log('ошибка миддлвеира обработки вопроса', err.message);
+    await ctx.reply('ошибка миддлвеира обработки вопроса', err.message);
+    console.log(ctx);
+    await comandList.rebootBot(ctx);
+    next();
   }
 
-  next()
+  
 })
 
 bot.command('g', async (ctx) => {
@@ -215,6 +243,8 @@ bot.command('g', async (ctx) => {
   } catch(err) {
     console.log('ошибка скачивания проекта с гитхаба', err.message);
     ctx.reply('ошибка скачивания проекта с гитхаба', err.message);
+    console.log(ctx);
+    comandList.rebootBot(ctx);
   }
 })
 
@@ -222,8 +252,10 @@ bot.command('g', async (ctx) => {
 const comandList = {
 
   async newSession(ctx) {
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
     await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
+    console.log(ctx.session.messages);
   },
 
   contentMax(ctx) {
@@ -241,11 +273,16 @@ const comandList = {
     ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, { parse_mode: "HTML" })
   },
 
-  rebootBot(ctx) {
+  async rebootBot(ctx) {
   bot.stop();
-  ctx.reply(`<b>Бот перезапускается, текущая сессия обнуляется</b>`, { parse_mode: "HTML" })
+  await ctx.reply(`<b>Бот перезапускается, текущая сессия обнуляется</b>`, { parse_mode: "HTML" })
   console.log('перезапуск бота')
-  ctx.session = null;
+  if (!ctx.session) { // Проверяем существует ли объект ctx.session
+    ctx.session = {};
+  }
+  ctx.session = {};
+  ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+
   bot.launch();
 },
 
@@ -273,6 +310,8 @@ const comandList = {
   
     } catch(err) {
       console.log('Ошибка архивирования и отправки файлов', err.message);
+      console.log(ctx);
+      comandList.rebootBot(ctx);
     }
   },
 
@@ -283,7 +322,9 @@ const comandList = {
       deleteFolderRecursive(recordsPath);
       await ctx.replyWithHTML(`Ваша папка с записями: <b>"${user}"</b> - удалена. `);
     } catch(err) {
-      console.log('ошибка удаления папки с вашими записями', err.message)
+      console.log('ошибка удаления папки с вашими записями', err.message);
+      console.log(ctx);
+      comandList.rebootBot(ctx);
     }
   }
   }
@@ -308,20 +349,28 @@ bot.command(`${botComands.new}`, async (ctx) => {
 // команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
 bot.command(`${botComands.record}`, async (ctx) => {
 
-  const text = ctx.message.text;
+  try {
+    const text = ctx.message.text;
 
-  const [,themeWithSigns, ...rest] = text.split(' ');
+      const [,themeWithSigns, ...rest] = text.split(' ');
 
-  const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-  const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
+      const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+      const theme = (themeWithSigns.match(pattern) !== null) ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
 
-  const data = rest.join(' ');
-  const user = ctx.message.from.last_name;
-  const time = ctx.session.currentDate;
+      const data = rest.join(' ');
+      const user = ctx.message.from.last_name;
+      const time = ctx.session.currentDate;
 
-  files.writeRecord(user, time, theme, data);
+      files.writeRecord(user, time, theme, data);
 
-  await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
+      await ctx.replyWithHTML(`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`);
+  } catch(err) {
+    console.log('ошибка записи', err.message);
+    await ctx.reply('ошибка записи', err.message);
+    console.log(ctx);
+    await comandList.rebootBot(ctx);
+  }
+  
 })
 
 bot.command(`${botComands.contextMax}`, async (ctx) => {
@@ -336,7 +385,7 @@ bot.command(`${botComands.contextBot}`, async (ctx) => {
   comandList.contentBot(ctx);
 })
 
-bot.command(`${botComands.reload}`, (ctx) => {
+bot.command(`${botComands.reboot}`, (ctx) => {
   comandList.rebootBot(ctx);
 })
 
@@ -393,6 +442,9 @@ bot.on('location', async (ctx) => {
 
   } catch(e) {
     console.log('Ошибка запроса погоды:', e.message);
+    ctx.reply('Ошибка запроса погоды:', e.message)
+    console.log(ctx);
+    comandList.rebootBot(ctx);
   }
 })
 
@@ -433,11 +485,14 @@ try {
   if (err) {
    await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
    console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
+   console.log(ctx)
    // перезапускаем бота при ошибке и обнуляем контекст общения 
    comandList.rebootBot(ctx);
   } else {
     await ctx.reply(`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`)
-    console.log('Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat')
+    console.log('Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat');
+    console.log(ctx);
+    comandList.rebootBot(ctx);
   }
 }
   }) 
@@ -524,23 +579,26 @@ try {
   
   } catch(err) {
     if (err) {
-
-      comandList.rebootBot(ctx);
-
       await ctx.reply(`Ошибка работы с голосовым чатом аи, текст ошибки: ${err.message}`)
       console.log('Ошибка работы с голосовым чатом аи, текст ошибки: ', err.message)
+      console.log(ctx)
+      comandList.rebootBot(ctx);
+
     } else {
       await ctx.reply(`Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле`)
       console.log('Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле')
+      console.log(ctx)
+      comandList.rebootBot(ctx);
     }
-    
   }
     }) 
 
 bot.launch();
 
+// global.process
+
 // nodemon({ script: bot.launch(), exitcrash: true }); // перезапуск через nodemon. Работает криво
 
 // прерывания нужны для адекватного "мягкого" завершения работы бота при получении от системы или пользователя соответствующих запросов. process.once - обрабатывает эти запросы, а коллбэк завершает работу бота () => bot.stop('SIGINT')
 process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условию Signal Interrupt - прерыванию процесса, например пользователем ctrl+c.
-process.once('SIGTERM', () => bot.stop('SIGTERM')); // (Signal Terminate) остановка бота по завершению работы, например от системы 
+process.once('SIGTERM', () => bot.stop('SIGTERM')); // (Signal Terminate) остановка бота по завершению работы, например от системы  
