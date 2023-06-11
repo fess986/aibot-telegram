@@ -21,7 +21,7 @@ export const helpMessage = `
 export const botComands = {
 
   new: 'new', // новая сессия
-  reload: 'reload', // перезагрузка бота
+  reboot: 'reboot', // перезагрузка бота
 
   contextMax: 'max', // контекст максима
   contextBot : 'bot', // контекст программирования бота
