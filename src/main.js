@@ -16,10 +16,7 @@ console.log(config.get("TEST"));  // видимо конфиг умеет пон
 
 const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
-bot.start(async (ctx) => {
-  ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION)) 
-  await ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
-});
+
 
 bot.help((ctx) => {
   ctx.reply(helpMessage);
@@ -126,6 +123,7 @@ bot.use(session()); // подключаем мидлвеир, который у�
 // прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
 bot.use(async (ctx, next) => {
   try {
+    console.log(ctx.session)
     const currentDate = new Date(); // получаем текущую дату и время
 
     if (!ctx.session) { // Проверяем существует ли объект ctx.session
@@ -137,6 +135,7 @@ bot.use(async (ctx, next) => {
       role: roles.SYSTEM, 
       content: `Системное время: ${currentDate}` 
     })
+    console.log(ctx.session)
 
     // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
 
@@ -151,6 +150,23 @@ bot.use(async (ctx, next) => {
     next();
   }
 
+});
+
+
+
+bot.start(async (ctx) => {
+  try {
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+    ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
+    await ctx.reply('Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.');
+
+  } catch(err) {
+    console.log('ошибка старта бота', err.message);
+    await ctx.reply('ошибка старта бота', err.message);
+    //console.log(ctx);
+    await comandList.rebootBot(ctx);
+  }
+  
 });
 
 bot.command(botComands.sendRecords, async (ctx) => {
@@ -182,7 +198,6 @@ bot.use(async (ctx, next) => {
     await comandList.rebootBot(ctx);
     next();
   }
-
   
 })
 
@@ -252,6 +267,7 @@ bot.command('g', async (ctx) => {
 const comandList = {
 
   async newSession(ctx) {
+    console.log(ctx)
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION))
     await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
@@ -274,16 +290,23 @@ const comandList = {
   },
 
   async rebootBot(ctx) {
-  bot.stop();
-  await ctx.reply(`<b>Бот перезапускается, текущая сессия обнуляется</b>`, { parse_mode: "HTML" })
-  console.log('перезапуск бота')
-  if (!ctx.session) { // Проверяем существует ли объект ctx.session
-    ctx.session = {};
-  }
-  ctx.session = {};
-  ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
 
-  bot.launch();
+  try {
+    bot.stop();
+    await ctx.reply(`<b>Бот перезапускается...</b>`, { parse_mode: "HTML" })
+    console.log('перезапуск бота')
+    if (!ctx.session) { // Проверяем существует ли объект ctx.session
+      ctx.session = {};
+    }
+    ctx.session = {};
+
+    await ctx.reply(`<b>Бот перезапущен.</b>`, { parse_mode: "HTML" })
+    bot.launch();
+  } catch(err) {
+    console.log('ошибка перезапуска бота', err.message)
+    ctx.reply('ошибка перезапуска бота', err.message)
+  }
+  
 },
 
   createImage(ctx) {
@@ -478,14 +501,14 @@ try {
   })
 
   await ctx.reply(response.content);
-  console.log('текст обработан аи...')
-  // console.log(ctx.session.messages)
+  console.log('текст обработан аи...................................................')
+  console.log(ctx.session.messages)
 
 } catch(err) {
   if (err) {
-   await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
-   console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
-   console.log(ctx)
+  await ctx.reply(`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`)
+  console.log('Ошибка работы с текстовым чатом аи, текст ошибки: ', err.message);
+  console.log(ctx)
    // перезапускаем бота при ошибке и обнуляем контекст общения 
    comandList.rebootBot(ctx);
   } else {
