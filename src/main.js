@@ -63,9 +63,12 @@ bot.command(botComands.contextButtons, async (ctx) => {
 			comandList.newSession(ctx);
 		});
 
+		throw new Error ('ass')
+
 		// buttonHandlers('btn1', false, 'первая кнопка');
 	} catch (err) {
-		await comandList.rebootBot1(ctx, "ошибка работы с кнопками контекста", err );
+		console.log(err)
+		await comandList.rebootBot(ctx, "ошибка работы с кнопками контекста: ", err);
 	}
 });
 
@@ -88,7 +91,7 @@ bot.command(botComands.manageButtons, async (ctx) => {
 
 		bot.action("reboot", async (ctx) => {
 			await ctx.answerCbQuery();
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, 'Перезагрузка по запросу пользователя: ');
 		});
 
 		bot.action("weather", async (ctx) => {
@@ -124,9 +127,7 @@ bot.command(botComands.manageButtons, async (ctx) => {
 			await comandList.removeRecords(ctx);
 		});
 	} catch (err) {
-		console.log("ошибка работы с кнопками управления", err);
-		console.log(ctx);
-		comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка работы с кнопками управления ботом: ", err);
 	}
 });
 
@@ -156,13 +157,7 @@ bot.use(async (ctx, next) => {
 
 		// console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
 	} catch (err) {
-		console.log("ошибка миддлвеира добавления системного времени", err.message);
-		await ctx.reply(
-			"ошибка миддлвеира добавления системного времени",
-			err.message
-		);
-		console.log(ctx);
-		await comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка MW добавления системного времени в контекст разговора: ", err);
 		await next();
 	}
 });
@@ -175,10 +170,7 @@ bot.start(async (ctx) => {
 			"Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях."
 		);
 	} catch (err) {
-		console.log("ошибка старта бота", err.message);
-		await ctx.reply("ошибка старта бота", err.message);
-		//console.log(ctx);
-		await comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка при старте бота: ", err);
 	}
 });
 
@@ -194,7 +186,6 @@ bot.command(botComands.removeRecords, async (ctx) => {
 bot.use(async (ctx, next) => {
 	try {
 		if (ctx?.session?.askImageDiscription === true) {
-			// ctx.session.imageDescription = ctx.message.text;
 			console.log('обработка запроса описания картинки', ctx.session.askImageDiscription)
 			await ctx.replyWithHTML(
 				`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, подождите немного... `
@@ -206,10 +197,7 @@ bot.use(async (ctx, next) => {
 		}
 		await next();
 	} catch (err) {
-		console.log("ошибка миддлвеира обработки вопроса", err.message); 
-		await ctx.reply("ошибка миддлвеира обработки вопроса", err.message);
-		console.log(ctx);
-		await comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка MW обработки вопроса об описании текста картинки: ", err);
 		await next();
 	}
 });
@@ -240,10 +228,7 @@ bot.use(async (ctx, next) => {
 		}
 		await next();
 	} catch (err) {
-		console.log("ошибка миддлвеира обработки вопроса", err.message);
-		await ctx.reply("ошибка миддлвеира обработки вопроса", err.message);
-		console.log(ctx);
-		await comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка MW обработки вопроса о создании записи: ", err);
 		await next();
 	}
 });
@@ -268,10 +253,7 @@ bot.command("g", async (ctx) => {
 				response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
 			});
 	} catch (err) {
-		console.log("ошибка скачивания проекта с гитхаба", err.message);
-		ctx.reply("ошибка скачивания проекта с гитхаба", err.message);
-		console.log(ctx);
-		comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка скачивания проекта с гитхаба: ", err);
 	}
 });
 
@@ -312,43 +294,21 @@ const comandList = {
 		});
 	},
 
-	async rebootBot1(ctx, text, err) {
+	async rebootBot(ctx, text, err = { message: 'объект ошибки отсутствует' }) {
 		try {
 			// bot.stop();
 			await ctx.reply(`<b>Бот перезапускается...</b>`, { parse_mode: "HTML" });
 			
 			if (!ctx.session) {
-				// Проверяем существует ли объект ctx.session
 				ctx.session = {};
 			}
 			ctx.session = {};
+
+			console.log(err.message)
 
 			console.log(`${text}`, err.message);
-			await ctx.reply(`${text}`, err.message);
+			await ctx.reply(`${text} ${err.message}`);
 			console.log(ctx);
-
-			console.log("перезапуск бота...");
-			await ctx.reply(`<b>Бот перезапущен.</b>`, { parse_mode: "HTML" });
-			// bot.launch();
-
-			await this.newSession(ctx);
-
-		} catch (err) {
-			console.log("ошибка перезапуска бота", err.message);
-			ctx.reply("ошибка перезапуска бота", err.message);
-		}
-	},
-
-	async rebootBot(ctx) {
-		try {
-			// bot.stop();
-			await ctx.reply(`<b>Бот перезапускается...</b>`, { parse_mode: "HTML" });
-			
-			if (!ctx.session) {
-				// Проверяем существует ли объект ctx.session
-				ctx.session = {};
-			}
-			ctx.session = {};
 
 			console.log("перезапуск бота...");
 			await ctx.reply(`<b>Бот перезапущен.</b>`, { parse_mode: "HTML" });
@@ -394,9 +354,7 @@ const comandList = {
 				{ caption: "Архив с вашими текстовыми записями скачан" }
 			);
 		} catch (err) {
-			console.log("Ошибка архивирования и отправки файлов", err.message);
-			console.log(ctx);
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "Ошибка архивирования и отправки файлов: ", err);
 		}
 	},
 
@@ -414,7 +372,7 @@ const comandList = {
 		} catch (err) {
 			console.log("ошибка удаления папки с вашими записями", err.message);
 			console.log(ctx);
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "ошибка удаления папки с вашими записями: ", err);
 		}
 	},
 };
@@ -457,10 +415,7 @@ bot.command(`${botComands.record}`, async (ctx) => {
 			`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`
 		);
 	} catch (err) {
-		console.log("ошибка записи", err.message);
-		await ctx.reply("ошибка записи", err.message);
-		console.log(ctx);
-		await comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "ошибка записи: ", err);
 	}
 });
 
@@ -476,8 +431,8 @@ bot.command(`${botComands.contextBot}`, async (ctx) => {
 	comandList.contentBot(ctx);
 });
 
-bot.command(`${botComands.reboot}`, (ctx) => {
-	comandList.rebootBot(ctx);
+bot.command(`${botComands.reboot}`, async (ctx) => {
+	await comandList.rebootBot(ctx, "Перезагрузка бота по запросу пользователя: ");
 });
 
 bot.command(`${botComands.image}`, (ctx) => {
@@ -536,10 +491,7 @@ bot.on("location", async (ctx) => {
   влажность: ${response.data.main.humidity} %
   давление: ${response.data.main.pressure} мм.рт.ст.`);
 	} catch (e) {
-		console.log("Ошибка запроса погоды:", e.message);
-		ctx.reply("Ошибка запроса погоды:", e.message);
-		console.log(ctx);
-		comandList.rebootBot(ctx);
+		await comandList.rebootBot(ctx, "Ошибка запроса погоды: ", e);
 	}
 });
 
@@ -579,25 +531,9 @@ bot.on(message("text"), async (ctx) => {
 		console.log(ctx.session.messages);
 	} catch (err) {
 		if (err) {
-			await ctx.reply(
-				`Ошибка работы с текстовым чатом аи, текст ошибки: ${err.message}`
-			);
-			console.log(
-				"Ошибка работы с текстовым чатом аи, текст ошибки: ",
-				err.message
-			);
-			console.log(ctx);
-			// перезапускаем бота при ошибке и обнуляем контекст общения
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "Ошибка работы с текстовым чатом аи, текст ошибки: ", err);
 		} else {
-			await ctx.reply(
-				`Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat`
-			);
-			console.log(
-				"Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat"
-			);
-			console.log(ctx);
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat: ");
 		}
 	}
 });
@@ -684,24 +620,9 @@ bot.on(message("voice"), async (ctx) => {
 		// console.log(link.href); // именно эта ссылка нам будет нужна
 	} catch (err) {
 		if (err) {
-			await ctx.reply(
-				`Ошибка работы с голосовым чатом аи, текст ошибки: ${err.message}`
-			);
-			console.log(
-				"Ошибка работы с голосовым чатом аи, текст ошибки: ",
-				err.message
-			);
-			console.log(ctx);
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "Ошибка работы с голосовым чатом аи, текст ошибки: ", err);
 		} else {
-			await ctx.reply(
-				`Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле`
-			);
-			console.log(
-				"Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле"
-			);
-			console.log(ctx);
-			comandList.rebootBot(ctx);
+			await comandList.rebootBot(ctx, "Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле: ");
 		}
 	}
 });
