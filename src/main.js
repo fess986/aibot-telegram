@@ -63,8 +63,6 @@ bot.command(botComands.contextButtons, async (ctx) => {
 			comandList.newSession(ctx);
 		});
 
-		throw new Error ('ass')
-
 		// buttonHandlers('btn1', false, 'первая кнопка');
 	} catch (err) {
 		console.log(err)
