@@ -19,6 +19,7 @@ import {
 	CONTEXT_CHAT_BOT,
 	helpMessage,
 } from "./context.js";
+import { join } from "path";
 
 console.log(config.get("TEST")); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -66,8 +67,12 @@ bot.command(botComands.contextButtons, async (ctx) => {
 
 		// buttonHandlers('btn1', false, 'первая кнопка');
 	} catch (err) {
-		console.log(err)
-		await comandList.rebootBot(ctx, "ошибка работы с кнопками контекста: ", err);
+		console.log(err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка работы с кнопками контекста: ",
+			err
+		);
 	}
 });
 
@@ -87,22 +92,24 @@ bot.command(botComands.bonusButtons, async (ctx) => {
 
 		bot.action("reboot", async (ctx) => {
 			await ctx.answerCbQuery();
-			await comandList.rebootBot(ctx, 'Перезагрузка по запросу пользователя: ');
+			await comandList.rebootBot(ctx, "Перезагрузка по запросу пользователя: ");
 		});
 
 		bot.action("weather", async (ctx) => {
 			await ctx.answerCbQuery();
 			weatherRequest(ctx);
 		});
-
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка работы с кнопками управления ботом: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка работы с кнопками управления ботом: ",
+			err
+		);
 	}
 });
 
 bot.command(botComands.recordButtons, async (ctx) => {
 	try {
-
 		await ctx.replyWithHTML(
 			"<b>Работа с записями:</b>",
 			Markup.inlineKeyboard([
@@ -130,7 +137,11 @@ bot.command(botComands.recordButtons, async (ctx) => {
 			await comandList.removeRecords(ctx);
 		});
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка работы с кнопками управления ботом: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка работы с кнопками управления ботом: ",
+			err
+		);
 	}
 });
 
@@ -161,7 +172,11 @@ bot.use(async (ctx, next) => {
 
 		// console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка MW добавления системного времени в контекст разговора: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка MW добавления системного времени в контекст разговора: ",
+			err
+		);
 		await next();
 	}
 });
@@ -170,7 +185,10 @@ bot.use(async (ctx, next) => {
 bot.use(async (ctx, next) => {
 	try {
 		if (ctx?.session?.askImageDiscription === true) {
-			console.log('обработка запроса описания картинки', ctx.session.askImageDiscription)
+			console.log(
+				"обработка запроса описания картинки",
+				ctx.session.askImageDiscription
+			);
 			await ctx.replyWithHTML(
 				`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, подождите немного... `
 			);
@@ -181,7 +199,11 @@ bot.use(async (ctx, next) => {
 		}
 		await next();
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка MW обработки вопроса об описании текста картинки: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка MW обработки вопроса об описании текста картинки: ",
+			err
+		);
 		await next();
 	}
 });
@@ -212,7 +234,11 @@ bot.use(async (ctx, next) => {
 		}
 		await next();
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка MW обработки вопроса о создании записи: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка MW обработки вопроса о создании записи: ",
+			err
+		);
 		await next();
 	}
 });
@@ -233,9 +259,8 @@ bot.start(async (ctx) => {
 
 //---------------------------ОПИСАНИЕ КОМАНД БОТА---------------
 const comandList = {
-
 	async newSession(ctx) {
-		console.log('Обнуление сессии...');
+		console.log("Обнуление сессии...");
 		ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
 		ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
 
@@ -270,11 +295,11 @@ const comandList = {
 		});
 	},
 
-	async rebootBot(ctx, text, err = { message: 'объект ошибки отсутствует' }) {
+	async rebootBot(ctx, text, err = { message: "объект ошибки отсутствует" }) {
 		try {
 			// bot.stop();
 			await ctx.reply(`<b>Бот перезапускается...</b>`, { parse_mode: "HTML" });
-			
+
 			if (!ctx.session) {
 				ctx.session = {};
 			}
@@ -289,7 +314,6 @@ const comandList = {
 			// bot.launch();
 
 			await this.newSession(ctx);
-
 		} catch (err) {
 			console.log("ошибка перезапуска бота", err.message);
 			ctx.reply("ошибка перезапуска бота", err.message);
@@ -306,28 +330,28 @@ const comandList = {
 	// команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
 	async createRecord(ctx) {
 		try {
-		const text = ctx.message.text;
+			const text = ctx.message.text;
 
-		const [, themeWithSigns, ...rest] = text.split(" ");
+			const [, themeWithSigns, ...rest] = text.split(" ");
 
-		const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-		const theme =
-			themeWithSigns.match(pattern) !== null
-				? themeWithSigns.match(pattern)[0].toLowerCase()
-				: "default";
+			const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+			const theme =
+				themeWithSigns.match(pattern) !== null
+					? themeWithSigns.match(pattern)[0].toLowerCase()
+					: "default";
 
-		const data = rest.join(" ");
-		const user = ctx.message.from.last_name;
-		const time = ctx.session.currentDate;
+			const data = rest.join(" ");
+			const user = ctx.message.from.last_name;
+			const time = ctx.session.currentDate;
 
-		files.writeRecord(user, time, theme, data);
+			files.writeRecord(user, time, theme, data);
 
-		await ctx.replyWithHTML(
-			`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`
-		);
-	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка записи: ", err);
-	}
+			await ctx.replyWithHTML(
+				`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`
+			);
+		} catch (err) {
+			await comandList.rebootBot(ctx, "ошибка записи: ", err);
+		}
 	},
 
 	async sendRecords(ctx) {
@@ -355,7 +379,11 @@ const comandList = {
 				{ caption: "Архив с вашими текстовыми записями скачан" }
 			);
 		} catch (err) {
-			await comandList.rebootBot(ctx, "Ошибка архивирования и отправки файлов: ", err);
+			await comandList.rebootBot(
+				ctx,
+				"Ошибка архивирования и отправки файлов: ",
+				err
+			);
 		}
 	},
 
@@ -371,7 +399,11 @@ const comandList = {
 				`Ваша папка с записями: <b>"${user}"</b> - удалена. `
 			);
 		} catch (err) {
-			await comandList.rebootBot(ctx, "ошибка удаления папки с вашими записями: ", err);
+			await comandList.rebootBot(
+				ctx,
+				"ошибка удаления папки с вашими записями: ",
+				err
+			);
 		}
 	},
 };
@@ -394,7 +426,7 @@ bot.command(`${botComands.new}`, async (ctx) => {
 });
 
 bot.command(`${botComands.record}`, async (ctx) => {
-	comandList.createRecord(ctx)
+	comandList.createRecord(ctx);
 });
 
 bot.command(botComands.sendRecords, async (ctx) => {
@@ -418,7 +450,10 @@ bot.command(`${botComands.contextBot}`, async (ctx) => {
 });
 
 bot.command(`${botComands.reboot}`, async (ctx) => {
-	await comandList.rebootBot(ctx, "Перезагрузка бота по запросу пользователя: ");
+	await comandList.rebootBot(
+		ctx,
+		"Перезагрузка бота по запросу пользователя: "
+	);
 });
 
 bot.command(`${botComands.image}`, (ctx) => {
@@ -449,7 +484,11 @@ bot.command("g", async (ctx) => {
 				response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
 			});
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка скачивания проекта с гитхаба: ", err);
+		await comandList.rebootBot(
+			ctx,
+			"ошибка скачивания проекта с гитхаба: ",
+			err
+		);
 	}
 });
 
@@ -542,9 +581,16 @@ bot.on(message("text"), async (ctx) => {
 		console.log(ctx.session.messages);
 	} catch (err) {
 		if (err) {
-			await comandList.rebootBot(ctx, "Ошибка работы с текстовым чатом аи, текст ошибки: ", err);
+			await comandList.rebootBot(
+				ctx,
+				"Ошибка работы с текстовым чатом аи, текст ошибки: ",
+				err
+			);
 		} else {
-			await comandList.rebootBot(ctx, "Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat: ");
+			await comandList.rebootBot(
+				ctx,
+				"Ошибка работы с текстовым чатом аи, скорее всего где то в openAi.chat: "
+			);
 		}
 	}
 });
@@ -554,52 +600,68 @@ bot.on(message("text"), async (ctx) => {
 // проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
 const checkVoice = (ctx, text) => {
 
+	if (!text) {
+		return true
+	}
+
 	const splitedText = text.split(" ");
-	const [firstWord, secondWord, thirdWord, forthWord] = splitedText;
+	const [firstWord, secondWord, thirdWord, forthWord, ...rest] = splitedText;
 
-		// await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
+	// await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
-		if (firstWord.toLowerCase().startsWith("контекст")) {
-			if (secondWord) {
-				if (secondWord.toLowerCase().startsWith("макс")) {
-					comandList.contentMax(ctx);
-				}
-
-				if (secondWord.toLowerCase().startsWith("нов")) {
-					comandList.newSession(ctx);
-				}
+	if (firstWord.toLowerCase().startsWith("контекст")) {
+		if (secondWord) {
+			if (secondWord.toLowerCase().startsWith("макс")) {
+				comandList.contentMax(ctx);
 			}
 
-			return true;
+			if (secondWord.toLowerCase().startsWith("нов")) {
+				comandList.newSession(ctx);
+			}
 		}
 
-		if (firstWord.toLowerCase().startsWith("погода")) {
-			weatherRequest(ctx);
-			return true;;
+		return true;
+	}
+
+	// "Голосовой набор ..."
+	if (firstWord.toLowerCase().startsWith("голос")) {
+		if (secondWord) {
+			if (secondWord.toLowerCase().startsWith("набор")) {
+				ctx.replyWithHTML('<b>Ваш текст:</b>')
+				ctx.reply(`${thirdWord} ${forthWord} ${rest.join(' ')}`)
+			}
 		}
 
-		// запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...".
-		if (firstWord.toLowerCase().startsWith("запис")) {
-			const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-			const theme =
-				forthWord.match(pattern) !== null
-					? forthWord.match(pattern)[0].toLowerCase()
-					: "default";
-			const user = ctx.message.from.last_name;
-			const time = ctx.session.currentDate;
+		return true;
+	}
 
-			files.writeRecord(user, time, theme, text);
+	if (firstWord.toLowerCase().startsWith("погода")) {
+		weatherRequest(ctx);
+		return true;
+	}
 
-			ctx.reply(
-				`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`,
-				{ parse_mode: "HTML" }
-			);
+	// запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...".
+	if (firstWord.toLowerCase().startsWith("запис")) {
+		const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+		const theme =
+			forthWord.match(pattern) !== null
+				? forthWord.match(pattern)[0].toLowerCase()
+				: "default";
+		const user = ctx.message.from.last_name;
+		const time = ctx.session.currentDate;
 
-			return true;;
-		}
+		files.writeRecord(user, time, theme, text);
 
-		return false
-}
+		ctx.reply(`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`, {
+			parse_mode: "HTML",
+		});
+
+		return true;
+	}
+
+	// если ни одна проверка не сработала, возвращаем false для дальнейшей передачи сообщения АИ
+	return false;
+};
 
 bot.on(message("voice"), async (ctx) => {
 	try {
@@ -613,12 +675,13 @@ bot.on(message("voice"), async (ctx) => {
 
 		// работаем с аи
 		const text = await openAi.transcription(mp3Path);
-		await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`)
+		await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`);
 
+		// запускаем проверку голосового сообщения и если какая из них сработала, не будем передавать его в AI
 		if (checkVoice(ctx, text)) {
-			return
+			return;
 		}
-		
+
 		// const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
 		ctx.session.messages.push({ role: roles.USER, content: text });
 
@@ -641,9 +704,16 @@ bot.on(message("voice"), async (ctx) => {
 		// console.log(link.href); // именно эта ссылка нам будет нужна
 	} catch (err) {
 		if (err) {
-			await comandList.rebootBot(ctx, "Ошибка работы с голосовым чатом аи, текст ошибки: ", err);
+			await comandList.rebootBot(
+				ctx,
+				"Ошибка работы с голосовым чатом аи, текст ошибки: ",
+				err
+			);
 		} else {
-			await comandList.rebootBot(ctx, "Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле: ");
+			await comandList.rebootBot(
+				ctx,
+				"Ошибка работы с голосовым чатом аи, вероятно в openAi-модуле: "
+			);
 		}
 	}
 });
