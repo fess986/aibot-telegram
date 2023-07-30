@@ -46,6 +46,7 @@ bot.command(botComands.contextButtons, async (ctx) => {
 		bot.action("max", async (ctx) => {
 			await ctx.answerCbQuery();
 			comandList.contentMax(ctx);
+			// throw new Error('ass')
 		});
 
 		bot.action("programmist", async (ctx) => {
@@ -133,12 +134,13 @@ bot.command(botComands.recordButtons, async (ctx) => {
 	}
 });
 
+//-----------------------МИДДЛВЕИРЫ---------------------------------
+
 bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
 // прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
 bot.use(async (ctx, next) => {
 	try {
-		console.log(ctx.session);
 		const currentDate = new Date(); // получаем текущую дату и время
 
 		if (!ctx.session) {
@@ -162,26 +164,6 @@ bot.use(async (ctx, next) => {
 		await comandList.rebootBot(ctx, "ошибка MW добавления системного времени в контекст разговора: ", err);
 		await next();
 	}
-});
-
-bot.start(async (ctx) => {
-	try {
-		ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
-		ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
-		await ctx.reply(
-			"Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях."
-		);
-	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка при старте бота: ", err);
-	}
-});
-
-bot.command(botComands.sendRecords, async (ctx) => {
-	comandList.sendRecords(ctx);
-});
-
-bot.command(botComands.removeRecords, async (ctx) => {
-	comandList.removeRecords(ctx);
 });
 
 // обработка того, задан ли вопрос пользователю по поводу описания картинки
@@ -235,31 +217,23 @@ bot.use(async (ctx, next) => {
 	}
 });
 
-bot.command("g", async (ctx) => {
+//-------------------------СТАРТ БОТА--------------------------
+
+bot.start(async (ctx) => {
 	try {
-		ctx.reply("скачиваем контекст из гитхаба");
-
-		const owner = "fess986";
-		const repo = "aibot-telegram";
-		const url = `https://api.github.com/repos/${owner}/${repo}/tarball`;
-
-		axios
-			.get(url, {
-				responseType: "stream",
-				headers: {
-					accept: "application/vnd.github.v3+json",
-					authorization: "Bearer [token]",
-				},
-			})
-			.then((response) => {
-				response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
-			});
+		ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+		ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
+		await ctx.reply(
+			"Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях."
+		);
 	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка скачивания проекта с гитхаба: ", err);
+		await comandList.rebootBot(ctx, "ошибка при старте бота: ", err);
 	}
 });
 
+//---------------------------ОПИСАНИЕ КОМАНД БОТА---------------
 const comandList = {
+
 	async newSession(ctx) {
 		console.log('Обнуление сессии...');
 		ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
@@ -306,8 +280,6 @@ const comandList = {
 			}
 			ctx.session = {};
 
-			console.log(err.message)
-
 			console.log(`${text}`, err.message);
 			await ctx.reply(`${text} ${err.message}`);
 			console.log(ctx);
@@ -329,6 +301,33 @@ const comandList = {
 			"Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке..."
 		);
 		ctx.session.askImageDiscription = true;
+	},
+
+	// команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
+	async createRecord(ctx) {
+		try {
+		const text = ctx.message.text;
+
+		const [, themeWithSigns, ...rest] = text.split(" ");
+
+		const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+		const theme =
+			themeWithSigns.match(pattern) !== null
+				? themeWithSigns.match(pattern)[0].toLowerCase()
+				: "default";
+
+		const data = rest.join(" ");
+		const user = ctx.message.from.last_name;
+		const time = ctx.session.currentDate;
+
+		files.writeRecord(user, time, theme, data);
+
+		await ctx.replyWithHTML(
+			`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`
+		);
+	} catch (err) {
+		await comandList.rebootBot(ctx, "ошибка записи: ", err);
+	}
 	},
 
 	async sendRecords(ctx) {
@@ -372,12 +371,12 @@ const comandList = {
 				`Ваша папка с записями: <b>"${user}"</b> - удалена. `
 			);
 		} catch (err) {
-			console.log("ошибка удаления папки с вашими записями", err.message);
-			console.log(ctx);
 			await comandList.rebootBot(ctx, "ошибка удаления папки с вашими записями: ", err);
 		}
 	},
 };
+
+//----------------------ЗАПУСК КОМАНД----------------------------
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command(`${botComands.new}`, async (ctx) => {
@@ -394,31 +393,16 @@ bot.command(`${botComands.new}`, async (ctx) => {
 	// await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 });
 
-// команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
 bot.command(`${botComands.record}`, async (ctx) => {
-	try {
-		const text = ctx.message.text;
+	comandList.createRecord(ctx)
+});
 
-		const [, themeWithSigns, ...rest] = text.split(" ");
+bot.command(botComands.sendRecords, async (ctx) => {
+	comandList.sendRecords(ctx);
+});
 
-		const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-		const theme =
-			themeWithSigns.match(pattern) !== null
-				? themeWithSigns.match(pattern)[0].toLowerCase()
-				: "default";
-
-		const data = rest.join(" ");
-		const user = ctx.message.from.last_name;
-		const time = ctx.session.currentDate;
-
-		files.writeRecord(user, time, theme, data);
-
-		await ctx.replyWithHTML(
-			`Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`
-		);
-	} catch (err) {
-		await comandList.rebootBot(ctx, "ошибка записи: ", err);
-	}
+bot.command(botComands.removeRecords, async (ctx) => {
+	comandList.removeRecords(ctx);
 });
 
 bot.command(`${botComands.contextMax}`, async (ctx) => {
@@ -440,6 +424,36 @@ bot.command(`${botComands.reboot}`, async (ctx) => {
 bot.command(`${botComands.image}`, (ctx) => {
 	comandList.createImage(ctx);
 });
+
+bot.command(`${botComands.weather}`, (ctx) => {
+	weatherRequest(ctx);
+});
+
+bot.command("g", async (ctx) => {
+	try {
+		ctx.reply("скачиваем контекст из гитхаба");
+
+		const owner = "fess986";
+		const repo = "aibot-telegram";
+		const url = `https://api.github.com/repos/${owner}/${repo}/tarball`;
+
+		axios
+			.get(url, {
+				responseType: "stream",
+				headers: {
+					accept: "application/vnd.github.v3+json",
+					authorization: "Bearer [token]",
+				},
+			})
+			.then((response) => {
+				response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
+			});
+	} catch (err) {
+		await comandList.rebootBot(ctx, "ошибка скачивания проекта с гитхаба: ", err);
+	}
+});
+
+// -------------------------------------- ПОГОДА ------------------
 
 const weatherRequest = (ctx) => {
 	// Отправляем запрос на получение местоположения
@@ -497,12 +511,7 @@ bot.on("location", async (ctx) => {
 	}
 });
 
-// запрос погоды
-bot.command(`${botComands.weather}`, (ctx) => {
-	weatherRequest(ctx);
-});
-
-///////////////////////////////////////////////////////////
+//--------------------------- AI-ТЕКСТ --------------------------
 // учим бота общаться через текст
 bot.on(message("text"), async (ctx) => {
 	if (
@@ -540,23 +549,13 @@ bot.on(message("text"), async (ctx) => {
 	}
 });
 
-/////////////////////////////////////////////// голос
-bot.on(message("voice"), async (ctx) => {
-	try {
-		await ctx.reply(code("Голосовое сообщение принято, обрабатывается..."));
+//------------------------------------ ГОЛОС ---------------------------
 
-		const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id); // получаем от телеграмбота ссылку на нашу голосовую запись с расширением .ogg
-		const userId = String(ctx.message.from.id);
-		const oggPath = await ogg.create(link.href, userId); // создаем наше сообщение в папке voices и  по итогу возвращаем в переменную oggPath - путь до файла. Обязательно прописываем await , так как нам нужно дождаться выполнения асинхронной операции
+// проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
+const checkVoice = (ctx, text) => {
 
-		const mp3Path = await ogg.toMp3(oggPath, userId); // трансформируем .ogg файл в .mp3 и удаляем первый. После этого получаем путь к этому mp3-файлу
-
-		// работаем с аи
-		const text = await openAi.transcription(mp3Path);
-		await ctx.reply(code(`Ваш запрос таков: ${text}`));
-
-		const splitedText = text.split(" ");
-		const [firstWord, secondWord, thirdWord, forthWord] = splitedText;
+	const splitedText = text.split(" ");
+	const [firstWord, secondWord, thirdWord, forthWord] = splitedText;
 
 		// await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
@@ -571,16 +570,16 @@ bot.on(message("voice"), async (ctx) => {
 				}
 			}
 
-			return;
+			return true;
 		}
 
 		if (firstWord.toLowerCase().startsWith("погода")) {
 			weatherRequest(ctx);
-			return;
+			return true;;
 		}
 
 		// запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...".
-		if (firstWord.toLowerCase().startsWith("запись")) {
+		if (firstWord.toLowerCase().startsWith("запис")) {
 			const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
 			const theme =
 				forthWord.match(pattern) !== null
@@ -592,15 +591,35 @@ bot.on(message("voice"), async (ctx) => {
 			files.writeRecord(user, time, theme, text);
 
 			ctx.reply(
-				`Ваша запись <b>${text}</b> сохранена в папке <b>${theme}</b>`,
+				`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`,
 				{ parse_mode: "HTML" }
 			);
 
-			return;
+			return true;;
 		}
 
-		// const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
+		return false
+}
 
+bot.on(message("voice"), async (ctx) => {
+	try {
+		await ctx.reply(code("Голосовое сообщение принято, обрабатывается..."));
+
+		const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id); // получаем от телеграмбота ссылку на нашу голосовую запись с расширением .ogg
+		const userId = String(ctx.message.from.id);
+		const oggPath = await ogg.create(link.href, userId); // создаем наше сообщение в папке voices и  по итогу возвращаем в переменную oggPath - путь до файла. Обязательно прописываем await , так как нам нужно дождаться выполнения асинхронной операции
+
+		const mp3Path = await ogg.toMp3(oggPath, userId); // трансформируем .ogg файл в .mp3 и удаляем первый. После этого получаем путь к этому mp3-файлу
+
+		// работаем с аи
+		const text = await openAi.transcription(mp3Path);
+		await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`)
+
+		if (checkVoice(ctx, text)) {
+			return
+		}
+		
+		// const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
 		ctx.session.messages.push({ role: roles.USER, content: text });
 
 		const response = await openAi.chat(ctx.session.messages);
