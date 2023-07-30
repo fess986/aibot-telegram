@@ -34,12 +34,12 @@ bot.command(botComands.contextButtons, async (ctx) => {
 		await ctx.replyWithHTML(
 			"<b>Добавление контекста:</b>",
 			Markup.inlineKeyboard([
+				[Markup.button.callback("Новый контекст!", "new")],
 				[
 					Markup.button.callback("Макс", "max"),
 					Markup.button.callback("Программист JS", "programmist"),
 					Markup.button.callback("Пишем бота", "bot"),
 				], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
-				[Markup.button.callback("Новый контекст!", "new")],
 			])
 		);
 
@@ -70,7 +70,7 @@ bot.command(botComands.contextButtons, async (ctx) => {
 	}
 });
 
-bot.command(botComands.manageButtons, async (ctx) => {
+bot.command(botComands.bonusButtons, async (ctx) => {
 	try {
 		await ctx.replyWithHTML(
 			"<b>Управление функциями бота:</b>",
@@ -81,9 +81,6 @@ bot.command(botComands.manageButtons, async (ctx) => {
 				], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
 				[Markup.button.callback("Текущая погода", "weather")],
 				[Markup.button.callback("Создать картинку по описанию", "createImage")],
-				[Markup.button.callback("Создать запись", "createRecord")],
-				[Markup.button.callback("Скачать записи", "sendRecord")],
-				[Markup.button.callback("Удалить записи", "removeRecords")],
 			])
 		);
 
@@ -97,15 +94,22 @@ bot.command(botComands.manageButtons, async (ctx) => {
 			weatherRequest(ctx);
 		});
 
-		bot.action("new", async (ctx) => {
-			await ctx.answerCbQuery();
-			comandList.newSession(ctx);
-		});
+	} catch (err) {
+		await comandList.rebootBot(ctx, "ошибка работы с кнопками управления ботом: ", err);
+	}
+});
 
-		bot.action("createImage", async (ctx) => {
-			await ctx.answerCbQuery();
-			comandList.createImage(ctx);
-		});
+bot.command(botComands.recordButtons, async (ctx) => {
+	try {
+
+		await ctx.replyWithHTML(
+			"<b>Работа с записями:</b>",
+			Markup.inlineKeyboard([
+				[Markup.button.callback("Создать запись", "createRecord")],
+				[Markup.button.callback("Скачать записи", "sendRecord")],
+				[Markup.button.callback("Удалить записи", "removeRecords")],
+			])
+		);
 
 		bot.action("createRecord", async (ctx) => {
 			await ctx.answerCbQuery();

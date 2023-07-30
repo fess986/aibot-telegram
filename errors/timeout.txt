@@ -1,0 +1,10 @@
+Ошибка длинного ожидания ответа от бота. Свалила бота
+
+/app/node_modules/p-timeout/index.js:39
+			const timeoutError = fallback instanceof Error ? fallback : new TimeoutError(message);
+			                                                            ^
+
+TimeoutError: Promise timed out after 90000 milliseconds
+    at Timeout._onTimeout (/app/node_modules/p-timeout/index.js:39:64)
+    at listOnTimeout (node:internal/timers:569:17)
+    at process.processTimers (node:internal/timers:512:7)
