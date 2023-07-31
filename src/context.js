@@ -26,7 +26,7 @@ export const helpMessage = `
 `;
 
 // константы комманд бота
-export const botComands = {
+export const botCommands = {
 	new: "new", // новая сессия
 	reboot: "reboot", // перезагрузка бота
 
