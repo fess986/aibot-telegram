@@ -87,12 +87,21 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
 				], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
 				[Markup.button.callback("Текущая погода", "weather")],
 				[Markup.button.callback("Создать картинку по описанию", "createImage")],
+				[
+					Markup.button.callback(
+						"Перевести голос в текст",
+						"createTextFromVoice"
+					),
+				],
 			])
 		);
 
 		bot.action("reboot", async (ctx) => {
 			await ctx.answerCbQuery();
-			await commandList.rebootBot(ctx, "Перезагрузка по запросу пользователя: ");
+			await commandList.rebootBot(
+				ctx,
+				"Перезагрузка по запросу пользователя: "
+			);
 		});
 
 		bot.action("weather", async (ctx) => {
@@ -106,6 +115,14 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
 			err
 		);
 	}
+
+	bot.action("createTextFromVoice", async (ctx) => {
+		await ctx.answerCbQuery();
+		ctx.reply(
+			"Произнесите голосом текст, который вы хотите увидеть в напечатанном виде"
+		);
+		ctx.session.createTextFromVoice = true;
+	});
 });
 
 bot.command(botCommands.recordButtons, async (ctx) => {
@@ -262,60 +279,69 @@ const commandList = {
 	async newSession(ctx) {
 		try {
 			console.log("Обнуление сессии...");
-		ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
-		ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
+			ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+			ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
 
-		ctx.session.askImageDiscription ??= false;
-		ctx.session.askImageDiscription = false;
-		ctx.session.askRecordText ??= false;
-		ctx.session.askRecordText = false;
-		await ctx.reply(
-			"Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!"
-		);
-		console.log(ctx.session.messages);
-		console.log(ctx.session);
-
-		} catch(err) {
-			console.log('Ошибка обнуления сессии')
+			ctx.session.askImageDiscription ??= false; // ??= - нуль-исключение. Значение справа присваивается только в том случае, если слева null или undefined
+			ctx.session.askImageDiscription = false;
+			ctx.session.askRecordText ??= false;
+			ctx.session.askRecordText = false;
+			await ctx.reply(
+				"Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!"
+			);
+			console.log(ctx.session.messages);
+			console.log(ctx.session);
+		} catch (err) {
+			console.log("Ошибка обнуления сессии");
 			// if (!!ctx) {
 			// 	await ctx.reply('Ошибка обнуления сессии');
 			// }
 
-			!!ctx && await ctx.reply('Ошибка обнуления сессии');
+			!!ctx && (await ctx.reply("Ошибка обнуления сессии"));
 		}
 	},
 
 	async contentMax(ctx) {
 		try {
-		ctx.session.messages.push(CONTEXT_MAX);
-		ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" });
-		} catch(err) {
-			commandList.rebootBot(ctx, 'Ошибка добавления контекста CONTEXT_MAX', err)
+			ctx.session.messages.push(CONTEXT_MAX);
+			ctx.reply(`Контекст <b>CONTEXT_MAX</b> добавлен`, { parse_mode: "HTML" });
+		} catch (err) {
+			commandList.rebootBot(
+				ctx,
+				"Ошибка добавления контекста CONTEXT_MAX",
+				err
+			);
 		}
 	},
 
 	contentProg(ctx) {
 		try {
 			ctx.session.messages.push(CONTEXT_PROGRAMMER);
-		ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, {
-			parse_mode: "HTML",
-		});
-		} catch(err) {
-			commandList.rebootBot(ctx, 'Ошибка добавления контекста CONTEXT_PROGRAMMER', err)
+			ctx.reply(`Контекст <b>CONTEXT_PROGRAMMER</b> добавлен`, {
+				parse_mode: "HTML",
+			});
+		} catch (err) {
+			commandList.rebootBot(
+				ctx,
+				"Ошибка добавления контекста CONTEXT_PROGRAMMER",
+				err
+			);
 		}
-		
 	},
 
 	contentBot(ctx) {
 		try {
 			ctx.session.messages.push(CONTEXT_CHAT_BOT);
-		ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, {
-			parse_mode: "HTML",
-		});
-		} catch(err) {
-			commandList.rebootBot(ctx, 'Ошибка добавления контекста CONTEXT_CHAT_BOT', err)
+			ctx.reply(`Контекст <b>CONTEXT_CHAT_BOT</b> добавлен`, {
+				parse_mode: "HTML",
+			});
+		} catch (err) {
+			commandList.rebootBot(
+				ctx,
+				"Ошибка добавления контекста CONTEXT_CHAT_BOT",
+				err
+			);
 		}
-		
 	},
 
 	async rebootBot(ctx, text, err = { message: "объект ошибки отсутствует" }) {
@@ -324,7 +350,7 @@ const commandList = {
 			console.log(`Сообщение ошибки при ребуте - ${err.message}`);
 
 			if (!ctx) {
-				throw new Error('НЕТ КОНТЕКСТА ПРИ ПЕРЕДАЧЕ ОШИБКИ В РЕБУТ')
+				throw new Error("НЕТ КОНТЕКСТА ПРИ ПЕРЕДАЧЕ ОШИБКИ В РЕБУТ");
 			}
 
 			await ctx.reply(`<b>Бот перезапускается...</b>`, { parse_mode: "HTML" });
@@ -346,18 +372,18 @@ const commandList = {
 			await this.newSession(ctx);
 		} catch (err) {
 			console.log("ошибка перезапуска бота", err.message);
-			!!ctx && await ctx.reply("ошибка перезапуска бота", err.message);
+			!!ctx && (await ctx.reply("ошибка перезапуска бота", err.message));
 		}
 	},
 
 	createImage(ctx) {
 		try {
 			ctx.reply(
-			"Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке..."
-		);
-		ctx.session.askImageDiscription = true;
-		} catch(err) {
-			commandList.rebootBot(ctx, 'Ошибка запроса на создание картинки')
+				"Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке..."
+			);
+			ctx.session.askImageDiscription = true;
+		} catch (err) {
+			commandList.rebootBot(ctx, "Ошибка запроса на создание картинки");
 		}
 	},
 
@@ -587,10 +613,18 @@ bot.on("location", async (ctx) => {
 //--------------------------- AI-ТЕКСТ --------------------------
 // учим бота общаться через текст
 bot.on(message("text"), async (ctx) => {
-	
+	if (ctx?.session?.createTextFromVoice === true) {
+		console.log("Попытка печатать текст при запросе текста");
+		ctx.reply(
+			"Вы попытались напечатать текст, а ожидалось голосовое сообщение. Вы плохо поступили! Ожидание голосового сообщения завершено, текст проигнорирован!"
+		);
+		ctx.session.createTextFromVoice = false;
+		return;
+	}
+
 	if (
-		ctx.session.askImageDiscription === true ||
-		ctx.session.askRecordText === true
+		ctx?.session?.askImageDiscription === true ||
+		ctx?.session?.askRecordText === true
 	) {
 		ctx.session.askImageDiscription = false;
 		ctx.session.askRecordText = false;
@@ -634,16 +668,26 @@ bot.on(message("text"), async (ctx) => {
 
 // проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
 const checkVoice = (ctx, text) => {
-
 	if (!text) {
-		return true
+		return true;
 	}
 
 	const splitedText = text.split(" ");
 	const [firstWord, secondWord, thirdWord, forthWord, ...rest] = splitedText;
 
+	// проверим, ожидается ли печать текста
+	if (ctx?.session?.createTextFromVoice === true) {
+		ctx.replyWithHTML("<b>Ваш текст:</b>");
+		ctx.reply(`${text}`);
+
+		ctx.session.createTextFromVoice ??= false;
+		ctx.session.createTextFromVoice = false;
+		return true;
+	}
+
 	// await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
 
+	// добавление контекста
 	if (firstWord.toLowerCase().startsWith("контекст")) {
 		if (secondWord) {
 			if (secondWord.toLowerCase().startsWith("макс")) {
@@ -662,14 +706,15 @@ const checkVoice = (ctx, text) => {
 	if (firstWord.toLowerCase().startsWith("голос")) {
 		if (secondWord) {
 			if (secondWord.toLowerCase().startsWith("набор")) {
-				ctx.replyWithHTML('<b>Ваш текст:</b>')
-				ctx.reply(`${thirdWord} ${forthWord} ${rest.join(' ')}`)
+				ctx.replyWithHTML("<b>Ваш текст:</b>");
+				ctx.reply(`${thirdWord} ${forthWord} ${rest.join(" ")}`);
 			}
 		}
 
 		return true;
 	}
 
+	// погода
 	if (firstWord.toLowerCase().startsWith("погода")) {
 		weatherRequest(ctx);
 		return true;
