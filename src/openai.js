@@ -16,11 +16,24 @@ class openAI {
 	async transcription(filePath) {
 		try {
 			// метод createTranscription принимает сам файл, так что мы в него засовываем не путь, а именно стрим, который читает файл. whisper-1  - это модель обработки
-			const response = await this.openai.createTranscription(
+			
+      const timePromise = new Promise((resolve) => {
+				setTimeout(() => resolve('ошибка'), 60000);
+			});
+      
+      const responsePromise = this.openai.createTranscription(
 				createReadStream(filePath),
 				"whisper-1"
 			);
-			return response.data.text;
+
+      const response = await Promise.race([responsePromise, timePromise]);
+
+      const responseText = (response === 'ошибка') ? 'ошибка' : response.data.text;
+
+      console.log(responseText)
+
+			return responseText;
+
 		} catch (e) {
 			// await ctx.reply('Ошибка перевода голоса в текст в аи, текст ошибки: ', err.message)
 			console.log(
@@ -47,11 +60,9 @@ class openAI {
 			const response = await Promise.race([responsePromise, timePromise]);
 
       const responseText = typeof response === 'string' ? 'ошибка' : response.data.choices[0].message;
-      // console.log(responseText)
 
 			return responseText;
 
-			// throw new Error("500 Internal Server Error");
 		} catch (err) {
 			// await ctx.reply('Ошибка ответа от чата-аи, текст ошибки: ', err.message)
 			console.log("error chating with gpt", err.message);

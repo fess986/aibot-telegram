@@ -682,6 +682,7 @@ bot.on(message("text"), async (ctx) => {
 
 // проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
 const checkVoice = async (ctx, text) => {
+
 	if (!text) {
 		return true;
 	}
@@ -706,14 +707,14 @@ const checkVoice = async (ctx, text) => {
 		if (secondWord) {
 			if (secondWord.toLowerCase().startsWith("макс")) {
 				commandList.contentMax(ctx);
+				return true;
 			}
 
 			if (secondWord.toLowerCase().startsWith("нов")) {
 				commandList.newSession(ctx);
+				return true;
 			}
 		}
-
-		return true;
 	}
 
 	// "Голосовой набор ..."
@@ -722,14 +723,17 @@ const checkVoice = async (ctx, text) => {
 			if (secondWord.toLowerCase().startsWith("набор")) {
 				await ctx.replyWithHTML("<b>Ваш текст:</b>");
 				await ctx.reply(`${thirdWord} ${forthWord} ${rest.join(" ")}`);
+				return true;
 			}
 		}
-
-		return true;
 	}
 
 	// погода
 	if (firstWord.toLowerCase().startsWith("погода")) {
+		if (secondWord) {
+			return false
+		}
+
 		weatherRequest(ctx);
 		return true;
 	}
@@ -772,7 +776,18 @@ bot.on(message("voice"), async (ctx) => {
 		await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`);
 
 		// запускаем проверку голосового сообщения и если какая из них сработала, не будем передавать его в AI
-		if (checkVoice(ctx, text)) {
+
+		if (text === 'ошибка') {
+			console.log('ошибка превышения таймаута на перевод голоса в текст')
+			await ctx.reply(ERROR_MESSAGES.timeOutVoice);
+
+			return
+		}
+
+		// проверяем, является ли голосовое сообщение какой-либо стандартной командой для бота или же это обращение к AI. 
+		const isCheckPass = await checkVoice(ctx, text);
+
+		if (isCheckPass) {
 			return;
 		}
 
