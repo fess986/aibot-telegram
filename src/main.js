@@ -18,6 +18,7 @@ import {
 	CONTEXT_PROGRAMMER,
 	CONTEXT_CHAT_BOT,
 	helpMessage,
+	ERROR_MESSAGES,
 } from "./context.js";
 import { join } from "path";
 
@@ -635,8 +636,23 @@ bot.on(message("text"), async (ctx) => {
 		await ctx.reply(code("Текстовое сообщение принято, обрабатывается..."));
 
 		ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
+		console.log(ctx.message.text);
 
 		const response = await openAi.chat(ctx.session.messages);
+
+		// проверяем, прошел ли запрос по таймайту, если нет - пишем сообщение пользователю и ничего не делаем
+		if (typeof response === "string") {
+			console.log("ошибка таймаута ...................................");
+			console.log("ошибочный запрос: ", ctx.message.text);
+
+			ctx.session.messages.pop(); // удалим наш запрос, который вызвал ошибку
+			await ctx.reply(ERROR_MESSAGES.timeOutChat);
+			return;
+		}
+
+		console.log(
+			"текст обработан аи..................................................."
+		);
 
 		ctx.session.messages.push({
 			role: roles.ASSISTANT,
@@ -644,10 +660,8 @@ bot.on(message("text"), async (ctx) => {
 		});
 
 		await ctx.reply(response.content);
-		console.log(
-			"текст обработан аи..................................................."
-		);
-		console.log(ctx.session.messages);
+		console.log(response.content);
+
 	} catch (err) {
 		if (err) {
 			await commandList.rebootBot(
@@ -667,7 +681,7 @@ bot.on(message("text"), async (ctx) => {
 //------------------------------------ ГОЛОС ---------------------------
 
 // проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
-const checkVoice = (ctx, text) => {
+const checkVoice = async (ctx, text) => {
 	if (!text) {
 		return true;
 	}
@@ -677,8 +691,8 @@ const checkVoice = (ctx, text) => {
 
 	// проверим, ожидается ли печать текста
 	if (ctx?.session?.createTextFromVoice === true) {
-		ctx.replyWithHTML("<b>Ваш текст:</b>");
-		ctx.reply(`${text}`);
+		await ctx.replyWithHTML("<b>Ваш текст:</b>");
+		await ctx.reply(`${text}`);
 
 		ctx.session.createTextFromVoice ??= false;
 		ctx.session.createTextFromVoice = false;
@@ -706,8 +720,8 @@ const checkVoice = (ctx, text) => {
 	if (firstWord.toLowerCase().startsWith("голос")) {
 		if (secondWord) {
 			if (secondWord.toLowerCase().startsWith("набор")) {
-				ctx.replyWithHTML("<b>Ваш текст:</b>");
-				ctx.reply(`${thirdWord} ${forthWord} ${rest.join(" ")}`);
+				await ctx.replyWithHTML("<b>Ваш текст:</b>");
+				await ctx.reply(`${thirdWord} ${forthWord} ${rest.join(" ")}`);
 			}
 		}
 
