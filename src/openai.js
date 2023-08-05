@@ -48,7 +48,7 @@ class openAI {
 			// для исключения ошибки по таймауту, мы будем проводить "гонку" между нашим сетевым запросом и промисом-заглушкой с обычным таймером на нужную нам величину. Обычно он падает после запроса на 90000ms (90 сек), но мы поставим поменьше, например на 60 сек
 
 			const timePromise = new Promise((resolve) => {
-				setTimeout(() => resolve('ошибка'), 70000);
+				setTimeout(() => resolve('ошибка'), 80000);
 			});
 
 			const responsePromise = this.openai.createChatCompletion({
@@ -72,12 +72,24 @@ class openAI {
 
 	async image(text) {
 		try {
-			const response = await this.openai.createImage({
+
+      console.log('ass ........................................')
+
+      const timePromise = new Promise((resolve) => {
+				setTimeout(() => resolve('ошибка'), 60000);
+			});
+
+			const responsePromise = this.openai.createImage({
 				prompt: text,
 				size: "256x256",
 				n: 1,
 			});
-			return response.data.data[0].url;
+
+      const response = await Promise.race([timePromise, responsePromise]);
+
+      const responseData = response === 'ошибка' ? 'ошибка' : response.data.data[0].url;
+
+			return responseData;
 			// console.log(response.data.data)
 		} catch (err) {
 			console.log("ошибка при создании изображения", err.message);

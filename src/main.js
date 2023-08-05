@@ -87,7 +87,6 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
 					Markup.button.callback("Новый контекст", "new"),
 				], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
 				[Markup.button.callback("Текущая погода", "weather")],
-				[Markup.button.callback("Создать картинку по описанию", "createImage")],
 				[
 					Markup.button.callback(
 						"Перевести голос в текст",
@@ -207,11 +206,19 @@ bot.use(async (ctx, next) => {
 				"обработка запроса описания картинки",
 				ctx.session.askImageDiscription
 			);
+			
 			await ctx.replyWithHTML(
 				`Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, подождите немного... `
 			);
 
 			const url = await openAi.image(ctx.message.text);
+
+			if (url === 'ошибка') {
+				await ctx.reply(ERROR_MESSAGES.timeOutImage)
+				ctx.session.askImageDiscription = false;
+
+				return;
+			}
 
 			await ctx.replyWithPhoto(Input.fromURL(url)); // используем специальный объект Input для того чтобы не было проблем с загрузкой картинки по url
 		}
