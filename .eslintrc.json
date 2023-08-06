@@ -1,0 +1,22 @@
+{
+  "extends": "airbnb",
+  "parserOptions": {
+    "ecmaVersion": 2021
+  },
+  "rules": {
+    "max-len": ["off"],
+    "no-console": ["off"],
+    "no-param-reassign": "off",
+    "no-extra-boolean-cast": "off",
+    "import/prefer-default-export": "off",
+    "class-methods-use-this": "off",
+    "import/extensions": [
+      "error",
+      "ignorePackages",
+      {
+        "js": "always",
+        "json": "always"
+      }
+    ]
+  }
+}
