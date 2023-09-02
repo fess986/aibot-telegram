@@ -347,6 +347,12 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
             'createTextFromVoice',
           ),
         ],
+        [
+          Markup.button.callback(
+            'Дополнить текст',
+            'textCompletion',
+          ),
+        ],
       ]),
     );
 
@@ -375,7 +381,17 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
     ctx1.reply(
       'Произнесите голосом текст, который вы хотите увидеть в напечатанном виде',
     );
+    ctx.session.createTextFromVoice ??= true;
     ctx.session.createTextFromVoice = true;
+  });
+
+  bot.action('textCompletion', async (ctx1) => {
+    await ctx1.answerCbQuery();
+    ctx1.replyWithHTML(
+      'Начните печатать текст, который вы хотите чтобы АИ дополнил. Лучше использовать <b> Английский язык </b> - так текст будет гораздо длиннее',
+    );
+    ctx1.session.createTextCompletion ??= true;
+    ctx1.session.createTextCompletion = true;
   });
 });
 
@@ -521,6 +537,45 @@ bot.use(async (ctx, next) => {
   }
 });
 
+// обработка того, задан ли вопрос пользователю по поводу дополнения текста
+bot.use(async (ctx, next) => {
+  try {
+    if (ctx?.session?.createTextCompletion === true) {
+      const userText = ctx?.update?.message?.text || 'no text';
+
+      if (!ctx?.update?.message?.text) {
+        ctx.reply('Вы должны были ввести какой-либо текст, в следущий раз будьте чуть внимательнее!');
+        ctx.session.createTextCompletion = false;
+        return;
+      }
+
+      ctx.replyWithHTML(`создаётся продолжение вашего текста <b> ${userText} </b>`);
+      const response = await openAi.completion(userText);
+
+      if (response === 'ошибка') {
+        await ctx.reply('Вылет по таймауту. Повторите свой запрос позже');
+
+        await next();
+        return;
+      }
+
+      // eslint-disable-next-line
+      const responseText = response?.data?.choices[0]?.text || 'По какой то причине текст не был сформирован';
+
+      await ctx.reply(responseText);
+      console.log(responseText);
+    }
+    await next();
+  } catch (err) {
+    await commandList.rebootBot(
+      ctx,
+      'ошибка MW обработки дополнения текста ',
+      err,
+    );
+    await next();
+  }
+});
+
 // -------------------------СТАРТ БОТА--------------------------
 
 bot.start(async (ctx) => {
@@ -624,7 +679,7 @@ bot.command('g', async (ctx) => {
 // учим бота общаться через текст
 bot.on(message('text'), async (ctx) => {
   if (ctx?.session?.createTextFromVoice === true) {
-    console.log('Попытка печатать текст при запросе текста');
+    console.log('Попытка печатать текст при запросе голосового сообщения');
     ctx.reply(
       'Вы попытались напечатать текст, а ожидалось голосовое сообщение. Вы плохо поступили! Ожидание голосового сообщения завершено, текст проигнорирован!',
     );
@@ -633,16 +688,18 @@ bot.on(message('text'), async (ctx) => {
   }
 
   if (
-    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true
+    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true
   ) {
     ctx.session.askImageDiscription = false;
     ctx.session.askRecordText = false;
+    ctx.session.createTextCompletion = false;
     return;
   }
 
   try {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     console.log(ctx.message.text);
 
@@ -662,10 +719,18 @@ bot.on(message('text'), async (ctx) => {
       'текст обработан аи...................................................',
     );
 
+    if (!response) {
+      await ctx.reply(ERROR_MESSAGES.noResponse);
+      return;
+    }
+
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({
       role: roles.ASSISTANT,
       content: response.content,
     });
+
+    console.log('we are here..........................');
 
     await ctx.reply(response.content);
     console.log(response.content);
@@ -690,6 +755,7 @@ bot.on(message('text'), async (ctx) => {
 // проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
 const checkVoice = async (ctx, text) => {
   if (!text) {
+    await ctx.replyWithHTML(ERROR_MESSAGES.noResponse);
     return true;
   }
 
@@ -796,11 +862,18 @@ bot.on(message('voice'), async (ctx) => {
     }
 
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: text });
 
     const response = await openAi.chat(ctx.session.messages);
 
+    if (!response) {
+      await ctx.reply(ERROR_MESSAGES.noResponse);
+      return;
+    }
+
     // после того как получаем ответ от аи - добавляем его в наш объект с сессией с пометкой ассистент
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({
       role: roles.ASSISTANT, // помечаем что этот контент пришел именно от самого бота
       content: response.content,

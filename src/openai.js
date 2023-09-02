@@ -68,6 +68,36 @@ class OpenAI {
     }
   }
 
+  async completion(message) {
+    const temperature = 0.5;
+    const maxTokens = 300;
+    // const stop = '\n';
+
+    try {
+      const timePromise = new Promise((resolve) => {
+        setTimeout(() => resolve('ошибка'), 70000);
+      });
+
+      const responsePromise = this.openai.createCompletion({
+        model: 'text-davinci-003',
+        prompt: message,
+        temperature,
+        max_tokens: maxTokens,
+        n: 1,
+      });
+
+      // ждем ответа от чата.
+      const response = await Promise.race([responsePromise, timePromise]);
+
+      // const responseText = typeof response === 'string' ? 'ошибка' : response.data.choices[0].message;
+
+      return response;
+    } catch (err) {
+      console.log('error AI completion', err.message);
+      return null;
+    }
+  }
+
   async image(text) {
     try {
       console.log('ass ........................................');
