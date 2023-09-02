@@ -721,6 +721,7 @@ bot.on(message('text'), async (ctx) => {
 
     if (!response) {
       await ctx.reply(ERROR_MESSAGES.noResponse);
+      console.log('ошибка ответа chatGPT');
       return;
     }
 
@@ -756,6 +757,7 @@ bot.on(message('text'), async (ctx) => {
 const checkVoice = async (ctx, text) => {
   if (!text) {
     await ctx.replyWithHTML(ERROR_MESSAGES.noResponse);
+    console.log('ошибка ответа chatGPT');
     return true;
   }
 
@@ -869,6 +871,7 @@ bot.on(message('voice'), async (ctx) => {
 
     if (!response) {
       await ctx.reply(ERROR_MESSAGES.noResponse);
+      console.log('ошибка ответа chatGPT');
       return;
     }
 
