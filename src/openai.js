@@ -2,11 +2,12 @@ import { createReadStream } from 'fs';
 // import { Configuration, OpenAIApi } from 'openai';
 import OpenAI from 'openai';
 import config from 'config';
+import { MODELS } from './context.js';
 
 class OpenAIClass {
   constructor(apiKey) {
     this.openai = new OpenAI({
-      apiKey  // This is also the default, can be omitted
+      apiKey, // This is also the default, can be omitted
     });
   }
 
@@ -49,8 +50,9 @@ class OpenAIClass {
       });
 
       const responsePromise = this.openai.chat.completions.create({
-        model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
-        messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
+        model: MODELS.gpt3_5, // модель. в будущем будет доступна еще версия с 4 чатом
+        messages,
+        temperature: 0.5, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
       });
 
       // ждем ответа от чата.
@@ -75,8 +77,8 @@ class OpenAIClass {
         setTimeout(() => resolve('ошибка'), 70000);
       });
 
-      const responsePromise = this.openai.createCompletion({
-        model: 'text-davinci-003',
+      const responsePromise = this.openai.completions.create({
+        model: MODELS.davinci,
         prompt: message,
         temperature,
         max_tokens: maxTokens,
@@ -85,8 +87,6 @@ class OpenAIClass {
 
       // ждем ответа от чата.
       const response = await Promise.race([responsePromise, timePromise]);
-
-      // const responseText = typeof response === 'string' ? 'ошибка' : response.data.choices[0].message;
 
       return response;
     } catch (err) {

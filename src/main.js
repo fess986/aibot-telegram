@@ -105,6 +105,9 @@ const commandList = {
       // ctx.session.askRecordText ??= false;
       ctx.session.askRecordText = ctx.session.askRecordText || false;
       ctx.session.askRecordText = false;
+      ctx.session.createTextCompletion = ctx.session.createTextCompletion || false;
+      ctx.session.createTextCompletion = false;
+
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',
       );
@@ -560,7 +563,7 @@ bot.use(async (ctx, next) => {
       }
 
       // eslint-disable-next-line
-      const responseText = response?.data?.choices[0]?.text || 'По какой то причине текст не был сформирован';
+      const responseText = response?.choices[0]?.text || 'По какой то причине текст не был сформирован';
 
       await ctx.reply(responseText);
       console.log(responseText);
