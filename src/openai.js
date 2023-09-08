@@ -103,7 +103,7 @@ class OpenAIClass {
         setTimeout(() => resolve('ошибка'), 60000);
       });
 
-      const responsePromise = this.openai.createImage({
+      const responsePromise = this.openai.images.generate({
         prompt: text,
         size: '256x256',
         n: 1,
@@ -111,10 +111,9 @@ class OpenAIClass {
 
       const response = await Promise.race([timePromise, responsePromise]);
 
-      const responseData = response === 'ошибка' ? 'ошибка' : response.data.data[0].url;
+      const responseData = response === 'ошибка' ? 'ошибка' : response.data[0].url;
 
       return responseData;
-      // console.log(response.data.data)
     } catch (err) {
       console.log('ошибка при создании изображения', err.message);
       return null;
