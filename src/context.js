@@ -56,6 +56,11 @@ export const botCommands = {
 
 export const INIT_SESSION = [];
 
+export const MODELS = {
+  gpt3_5: 'gpt-3.5-turbo',
+  davinci: 'text-davinci-003',
+};
+
 export const CONTEXT_MAX = {
   role: roles.USER,
   content:
