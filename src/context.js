@@ -59,6 +59,7 @@ export const INIT_SESSION = [];
 export const MODELS = {
   gpt3_5: 'gpt-3.5-turbo',
   davinci: 'text-davinci-003',
+  whisper: 'whisper-1',
 };
 
 export const CONTEXT_MAX = {

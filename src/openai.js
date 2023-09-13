@@ -19,16 +19,14 @@ class OpenAIClass {
         setTimeout(() => resolve('ошибка'), 60000);
       });
 
-      const responsePromise = this.openai.createTranscription(
-        createReadStream(filePath),
-        'whisper-1',
-      );
+      const responsePromise = this.openai.audio.transcriptions.create({
+        model: MODELS.whisper,
+        file: createReadStream(filePath),
+      });
 
       const response = await Promise.race([responsePromise, timePromise]);
 
-      const responseText = (response === 'ошибка') ? 'ошибка' : response.data.text;
-
-      console.log(responseText);
+      const responseText = (response === 'ошибка') ? 'ошибка' : response.text;
 
       return responseText;
     } catch (err) {
