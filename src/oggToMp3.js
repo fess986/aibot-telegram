@@ -56,7 +56,7 @@ class OggConverter {
 
       return new Promise((res, reject) => {
         ffmpeg(inputPath) // запускаем конвертер для нашего огг-файла, указывая путь до него
-          .inputOption('-t 240') // настройка кодека, не вникаем
+          .inputOption('-t 240') // настройка кодека, 240 - это количество секунд, которые будут переводиться в mp3
           .output(outputPath) // куда он будет отправлен
           .on('end', () => {
             removeFile(inputPath); // удаляем ogg файл в конце трансформации
