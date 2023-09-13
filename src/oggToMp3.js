@@ -22,7 +22,8 @@ class OggConverter {
     // console.log(this.value);
     try {
       const oggPath = resolve(__dirname, '../voices', `${fileName}.ogg`);
-      const response = await axios({
+      // console.log('oggPath внутри функции - ', oggPath);
+      const responseAxios = await axios({
         method: 'get',
         url,
         responseType: 'stream', // будем получать ответ в качестве стрима
@@ -33,8 +34,8 @@ class OggConverter {
       // так как мы работаем в асинхронной функции, её итогом мы можем вернуть промис выполнения наших задач, но это не обязательно, так как в любом случае результат возврата асинхронной функции будет обернут в промис
       return new Promise((res) => {
         const stream = createWriteStream(oggPath);
-        response.data.pipe(stream); // направляет хтпп-данные из аксиос-запроса в поток createWriteStream по заданному пути, то есть
-        stream.on('finish', () => res(oggPath)); // по итогу возвращаем наш огг файл и отправляем его в папку voices
+        responseAxios.data.pipe(stream); // направляет хтпп-данные из аксиос-запроса в поток createWriteStream по заданному пути, то есть
+        stream.on('finish', () => res(oggPath)); // в конце из функции возвращаем путь до файла
       });
 
       // const stream = createWriteStream(oggPath);
@@ -50,16 +51,12 @@ class OggConverter {
   }
 
   toMp3(inputPath, outputName) {
-  // console.log(inputPath)
-
     try {
       const outputPath = resolve(dirname(inputPath), `${outputName}.mp3`);
 
-      // throw new Error('тестовая ошибка')
-
       return new Promise((res, reject) => {
         ffmpeg(inputPath) // запускаем конвертер для нашего огг-файла, указывая путь до него
-          .inputOption('-t 30') // настройка кодека, не вникаем
+          .inputOption('-t 240') // настройка кодека, не вникаем
           .output(outputPath) // куда он будет отправлен
           .on('end', () => {
             removeFile(inputPath); // удаляем ogg файл в конце трансформации
