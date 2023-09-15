@@ -703,13 +703,13 @@ bot.on(message('text'), async (ctx) => {
   try {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
-    const loader = new Loader(ctx);
+    const textLoader = new Loader(ctx);
 
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     console.log(ctx.message.text);
 
-    loader.show();
+    textLoader.show();
 
     const response = await openAi.chat(ctx.session.messages);
 
@@ -741,7 +741,7 @@ bot.on(message('text'), async (ctx) => {
 
     await ctx.reply(response.content);
 
-    loader.hide();
+    textLoader.hide();
 
     console.log(response.content);
   } catch (err) {
@@ -846,9 +846,6 @@ bot.on(message('voice'), async (ctx) => {
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
 
-    const loader = new Loader(ctx);
-    loader.show();
-
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id); // получаем от телеграмбота ссылку на нашу голосовую запись с расширением .ogg
     const userId = String(ctx.message.from.id);
     const oggPath = await ogg.create(link.href, userId); // создаем наше сообщение в папке voices и  по итогу возвращаем в переменную oggPath - путь до файла. Обязательно прописываем await , так как нам нужно дождаться выполнения асинхронной операции
@@ -859,8 +856,6 @@ bot.on(message('voice'), async (ctx) => {
 
     // работаем с аи
     const text = await openAi.transcription(mp3Path);
-
-    loader.hide();
 
     await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`);
 
@@ -882,7 +877,8 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
-    loader.show();
+    const voiceAnswerLoader = new Loader(ctx);
+    voiceAnswerLoader.show();
 
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
@@ -903,7 +899,7 @@ bot.on(message('voice'), async (ctx) => {
       content: response.content,
     });
 
-    loader.hide();
+    voiceAnswerLoader.hide();
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
