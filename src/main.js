@@ -11,6 +11,7 @@ import { deleteFolderRecursive } from './utils.js';
 import { ogg } from './oggToMp3.js';
 import { openAi } from './openai.js';
 import { files } from './files.js';
+import { Loader } from './loader.js';
 
 import {
   roles,
@@ -702,9 +703,13 @@ bot.on(message('text'), async (ctx) => {
   try {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
+    const loader = new Loader(ctx);
+
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     console.log(ctx.message.text);
+
+    loader.show();
 
     const response = await openAi.chat(ctx.session.messages);
 
@@ -734,9 +739,10 @@ bot.on(message('text'), async (ctx) => {
       content: response.content,
     });
 
-    console.log('we are here..........................');
-
     await ctx.reply(response.content);
+
+    loader.hide();
+
     console.log(response.content);
   } catch (err) {
     if (err) {
