@@ -846,6 +846,9 @@ bot.on(message('voice'), async (ctx) => {
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
 
+    const loader = new Loader(ctx);
+    loader.show();
+
     const link = await ctx.telegram.getFileLink(ctx.message.voice.file_id); // получаем от телеграмбота ссылку на нашу голосовую запись с расширением .ogg
     const userId = String(ctx.message.from.id);
     const oggPath = await ogg.create(link.href, userId); // создаем наше сообщение в папке voices и  по итогу возвращаем в переменную oggPath - путь до файла. Обязательно прописываем await , так как нам нужно дождаться выполнения асинхронной операции
@@ -856,6 +859,9 @@ bot.on(message('voice'), async (ctx) => {
 
     // работаем с аи
     const text = await openAi.transcription(mp3Path);
+
+    loader.hide();
+
     await ctx.replyWithHTML(`Ваш запрос таков: <b> ${text} </b>`);
 
     // для тестов отключим дальнейшие телодвижения ------------------------
@@ -876,6 +882,8 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
+    loader.show();
+
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: text });
@@ -894,6 +902,8 @@ bot.on(message('voice'), async (ctx) => {
       role: roles.ASSISTANT, // помечаем что этот контент пришел именно от самого бота
       content: response.content,
     });
+
+    loader.hide();
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
