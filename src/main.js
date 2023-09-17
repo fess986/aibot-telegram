@@ -739,9 +739,9 @@ bot.on(message('text'), async (ctx) => {
       content: response.content,
     });
 
-    await ctx.reply(response.content);
-
     textLoader.hide();
+
+    await ctx.reply(response.content);
 
     console.log(response.content);
   } catch (err) {

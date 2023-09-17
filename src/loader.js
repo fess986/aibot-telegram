@@ -39,15 +39,17 @@ export class Loader {
       console.log(this.icons[emoji][index]);
 
       this.message = await this.ctx.reply(this.icons[emoji][index]);
+      // this.message = await this.ctx.reply(this.icons.clock[index]);
 
       this.interval = setInterval(() => {
-        index = this.icons.length - 1 <= index ? 0 : index + 1;
+        index = this.icons[emoji].length - 1 <= index ? 0 : index + 1;
 
         this.ctx.telegram.editMessageText( // метод который позволяет менять сообщение, которое уже существует в чате телеграмма
           this.ctx.chat.id, // чат в котором мы работаем
           this.message.message_id, // сообщение которое мы хотим поменять
           null,
           this.icons[emoji][index],
+          // this.icons.clock[index],
         );
       }, 1000);
     } catch (err) {
