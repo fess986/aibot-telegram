@@ -34,11 +34,12 @@ export class Loader {
   async show() {
     try {
       let index = 0;
-      const emoji = getRandomEmoji();
+      // const emoji = getRandomEmoji();
 
-      console.log(this.icons[emoji][index]);
+      // console.log(this.icons[emoji][index]);
 
-      this.message = await this.ctx.reply(this.icons[emoji][index]);
+      // this.message = await this.ctx.reply(this.icons[emoji][index]);
+      this.message = await this.ctx.reply(this.icons.clock[index]);
 
       this.interval = setInterval(() => {
         index = this.icons.length - 1 <= index ? 0 : index + 1;
@@ -47,7 +48,8 @@ export class Loader {
           this.ctx.chat.id, // чат в котором мы работаем
           this.message.message_id, // сообщение которое мы хотим поменять
           null,
-          this.icons[emoji][index],
+          // this.icons[emoji][index],
+          this.icons.clock[index],
         );
       }, 1000);
     } catch (err) {
