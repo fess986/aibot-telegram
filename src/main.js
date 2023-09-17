@@ -877,8 +877,8 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
-    // const voiceAnswerLoader = new Loader(ctx);
-    // voiceAnswerLoader.show();
+    const voiceAnswerLoader = new Loader(ctx);
+    voiceAnswerLoader.show();
 
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
@@ -899,7 +899,7 @@ bot.on(message('voice'), async (ctx) => {
       content: response.content,
     });
 
-    // voiceAnswerLoader.hide();
+    voiceAnswerLoader.hide();
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
