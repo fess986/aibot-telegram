@@ -12,6 +12,7 @@ import { ogg } from './oggToMp3.js';
 import { openAi } from './openai.js';
 import { files } from './files.js';
 import { Loader } from './loader.js';
+import { createNotionRecord } from './notion.js';
 
 import {
   roles,
@@ -286,6 +287,12 @@ const commandList = {
       );
     }
   },
+
+  async createNotionRecord(ctx) {
+    ctx.reply('Создана новая запись');
+    await createNotionRecord();
+  },
+
 };
 
 // тестируем работу с кнопками. Для того чтобы всё выполнялось по порядку, делаем функцию асинхронной и потом при помощи await ожидаем выполнение очередной задачи. При этом не забываем трай-кэтч при любой асинхронщине, чтобы не крашить бота при асинхронной ошибке
@@ -677,6 +684,10 @@ bot.command('g', async (ctx) => {
       err,
     );
   }
+});
+
+bot.command(`${botCommands.createNotionRecord}`, async (ctx) => {
+  await commandList.createNotionRecord(ctx);
 });
 
 // --------------------------- AI-ТЕКСТ --------------------------

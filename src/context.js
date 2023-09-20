@@ -52,6 +52,8 @@ export const botCommands = {
   contextButtons: 'context', // меню с добавлением контекста общения
   bonusButtons: 'bonus', // меню с управлением приложением
   recordButtons: 'records',
+
+  createNotionRecord: 'nr',
 };
 
 export const INIT_SESSION = [];
