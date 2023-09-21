@@ -288,9 +288,25 @@ const commandList = {
     }
   },
 
+  // создание записи в ноушн
   async createNotionRecord(ctx) {
-    ctx.reply('Создана новая запись');
-    await createNotionRecord();
+    try {
+      const { text } = ctx.message;
+      console.log(text);
+
+      const [, ...rest] = text.split(' ');
+
+      if (rest.length === 0) {
+        await ctx.reply('Пустой запрос, повторите еще раз');
+        return;
+      }
+
+      const data = rest.join(' ');
+      const response = await createNotionRecord(data);
+      await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
+    } catch (err) {
+      console.log('ошибка добавление записи в ноушен', err.message);
+    }
   },
 
 };
