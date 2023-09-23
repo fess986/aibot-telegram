@@ -7,12 +7,12 @@ import { code } from 'telegraf/format'; // специальная фишка, к
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 import axios from 'axios';
 
-import { deleteFolderRecursive } from './utils.js';
-import { ogg } from './oggToMp3.js';
-import { openAi } from './openai.js';
-import { files } from './files.js';
-import { Loader } from './loader.js';
-import { createNotionRecord } from './notion.js';
+import { deleteFolderRecursive } from './utils/utils.js';
+import { ogg } from './utils/oggToMp3.js';
+import { openAi } from './API/openai.js';
+import { files } from './utils/files.js';
+import { Loader } from './loader/loader.js';
+import { createNotionRecord } from './API/notion.js';
 
 import {
   roles,
@@ -23,7 +23,7 @@ import {
   CONTEXT_CHAT_BOT,
   helpMessage,
   ERROR_MESSAGES,
-} from './context.js';
+} from './const/context.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -31,11 +31,6 @@ const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 bot.help((ctx) => {
   ctx.reply(helpMessage);
-});
-
-// Обработка полученной локации и вывод текущей погоды на экран
-bot.on('location', async (ctx) => {
-  commandList.weatherLocation(ctx);
 });
 
 // ---------------------------ОПИСАНИЕ КОМАНД БОТА---------------
@@ -325,6 +320,11 @@ const commandList = {
     }
   },
 };
+
+// Обработка полученной локации и вывод текущей погоды на экран
+bot.on('location', async (ctx) => {
+  commandList.weatherLocation(ctx);
+});
 
 // Обработка полученной локации и вывод текущей погоды на экран
 bot.on('location', async (ctx) => {
