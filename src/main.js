@@ -33,63 +33,9 @@ bot.help((ctx) => {
   ctx.reply(helpMessage);
 });
 
-// -------------------------------------- ПОГОДА ------------------
-
-const weatherRequest = (ctx) => {
-  // Отправляем запрос на получение местоположения
-  ctx
-    .reply(
-      'Пожалуйста, поделитесь своим местоположением для того чтобы узнать прогноз погоды',
-      {
-        // добавляем кнопку для запроса местоположения
-        reply_markup: {
-          keyboard: [
-            // массив массивов с объектами, которые будут отображаться на клавиатуре
-            [
-              {
-                text: 'Поделиться местоположением',
-                request_location: true, // запрашивает у пользователя разрешение на использование его местоположения, если он нажмет на эту кнопку
-              },
-            ],
-          ],
-          resize_keyboard: true, // логическая настройка, которая позволяет изменять размер клавиатуры (true/false)
-          one_time_keyboard: true, // логическая настройка, которая должна позволять удалять клавиатуру после ее использования (true/false), по факту она просто скрывает в "бутерброд" эту кнопку, а удаляем мы ее уже после
-          // remove_keyboard: true, - тут эта настройка не работает почему то
-          selective: true,
-        },
-      },
-    )
-    .then(() => {
-      setTimeout(() => {
-        ctx.reply('Запрос геолокации удален', {
-          reply_markup: {
-            remove_keyboard: true, // удалаяем кнопку через 10 сек
-          },
-        });
-      }, 10000); // Задержка в 5 секунд
-    });
-};
-
 // Обработка полученной локации и вывод текущей погоды на экран
 bot.on('location', async (ctx) => {
-  try {
-    const { latitude, longitude } = ctx.message.location; // после запроса у пользователя мы получаем объект location
-    // console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
-
-    const weatherRequestURL = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${config.get(
-      'WEATHER_KEY',
-    )}`;
-
-    const response = await axios.get(weatherRequestURL);
-    ctx.reply(`Город: ${response.data.name}
-  ситуация на улице: ${response.data.weather[0].description}
-  температура: ${response.data.main.temp} °C
-  влажность: ${response.data.main.humidity} %
-  давление: ${response.data.main.pressure} мм.рт.ст.`);
-  } catch (e) {
-    // eslint-disable-next-line no-use-before-define
-    await commandList.rebootBot(ctx, 'Ошибка запроса погоды: ', e); // отключаем проверку линтера, так как получается перекрестный вызов
-  }
+  commandList.weatherLocation(ctx);
 });
 
 // ---------------------------ОПИСАНИЕ КОМАНД БОТА---------------
@@ -123,6 +69,62 @@ const commandList = {
       }
 
       // !!ctx && (await ctx.reply('Ошибка обнуления сессии')); // линтер не понимает
+    }
+  },
+
+  weatherRequest(ctx) {
+    // Отправляем запрос на получение местоположения
+    ctx
+      .reply(
+        'Пожалуйста, поделитесь своим местоположением для того чтобы узнать прогноз погоды',
+        {
+          // добавляем кнопку для запроса местоположения
+          reply_markup: {
+            keyboard: [
+              // массив массивов с объектами, которые будут отображаться на клавиатуре
+              [
+                {
+                  text: 'Поделиться местоположением',
+                  request_location: true, // запрашивает у пользователя разрешение на использование его местоположения, если он нажмет на эту кнопку
+                },
+              ],
+            ],
+            resize_keyboard: true, // логическая настройка, которая позволяет изменять размер клавиатуры (true/false)
+            one_time_keyboard: true, // логическая настройка, которая должна позволять удалять клавиатуру после ее использования (true/false), по факту она просто скрывает в "бутерброд" эту кнопку, а удаляем мы ее уже после
+            // remove_keyboard: true, - тут эта настройка не работает почему то
+            selective: true,
+          },
+        },
+      )
+      .then(() => {
+        setTimeout(() => {
+          ctx.reply('Запрос геолокации удален', {
+            reply_markup: {
+              remove_keyboard: true, // удалаяем кнопку через 10 сек
+            },
+          });
+        }, 10000); // Задержка в 5 секунд
+      });
+  },
+
+  async weatherLocation(ctx) {
+    try {
+      const { latitude, longitude } = ctx.message.location; // после запроса у пользователя мы получаем объект location
+      // console.log(`Latitude: ${latitude}, Longitude: ${longitude}`);
+
+      const weatherRequestURL = `https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=metric&appid=${config.get(
+        'WEATHER_KEY',
+      )}`;
+
+      const response = await axios.get(weatherRequestURL);
+      ctx.reply(`Город: ${response.data.name}
+    ситуация на улице: ${response.data.weather[0].description}
+    температура: ${response.data.main.temp} °C
+    влажность: ${response.data.main.humidity} %
+    давление: ${response.data.main.pressure} мм.рт.ст.`);
+    } catch (e) {
+      // eslint-disable-next-line no-use-before-define
+      await commandList.rebootBot(ctx, 'Ошибка запроса погоды: ', e); // отключаем проверку линтера, так как получается перекрестный вызов
     }
   },
 
@@ -218,11 +220,26 @@ const commandList = {
   },
 
   // команда для записи заметки в формате "/record theme ..." - в итоге заметка сохранится в папку record/theme , а сообщение "..." будет сохранено в файле
-  async createRecord(ctx) {
+  async createRecord(ctx, mode = 'default') {
     try {
+      // await writeRecord(ctx);
       const { text } = ctx.message;
 
-      const [, themeWithSigns, ...rest] = text.split(' ');
+      let themeWithSigns;
+      let rest;
+
+      switch (mode) {
+        case 'default':
+          [, themeWithSigns, ...rest] = text.split(' ');
+          break;
+
+        case 'button':
+          [themeWithSigns, ...rest] = text.split(' ');
+          break;
+
+        default:
+          [, themeWithSigns, ...rest] = text.split(' ');
+      }
 
       const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
       const theme = themeWithSigns.match(pattern) !== null ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
@@ -289,10 +306,9 @@ const commandList = {
   },
 
   // создание записи в ноушн
-  async createNotionRecord(ctx) {
+  async createNotionRecordCommand(ctx) {
     try {
       const { text } = ctx.message;
-      console.log(text);
 
       const [, ...rest] = text.split(' ');
 
@@ -308,8 +324,12 @@ const commandList = {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
   },
-
 };
+
+// Обработка полученной локации и вывод текущей погоды на экран
+bot.on('location', async (ctx) => {
+  commandList.weatherLocation(ctx);
+});
 
 // тестируем работу с кнопками. Для того чтобы всё выполнялось по порядку, делаем функцию асинхронной и потом при помощи await ожидаем выполнение очередной задачи. При этом не забываем трай-кэтч при любой асинхронщине, чтобы не крашить бота при асинхронной ошибке
 bot.command(botCommands.contextButtons, async (ctx) => {
@@ -329,7 +349,6 @@ bot.command(botCommands.contextButtons, async (ctx) => {
     bot.action('max', async (ctx1) => {
       await ctx1.answerCbQuery();
       commandList.contentMax(ctx1);
-      // throw new Error('ass')
     });
 
     bot.action('programmist', async (ctx1) => {
@@ -346,8 +365,6 @@ bot.command(botCommands.contextButtons, async (ctx) => {
       await ctx1.answerCbQuery();
       commandList.newSession(ctx1);
     });
-
-    // buttonHandlers('btn1', false, 'первая кнопка');
   } catch (err) {
     console.log(err);
     await commandList.rebootBot(
@@ -393,7 +410,7 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
 
     bot.action('weather', async (ctx1) => {
       await ctx1.answerCbQuery();
-      weatherRequest(ctx1);
+      commandList.weatherRequest(ctx1);
     });
   } catch (err) {
     await commandList.rebootBot(
@@ -536,23 +553,9 @@ bot.use(async (ctx, next) => {
 bot.use(async (ctx, next) => {
   try {
     if (ctx?.session?.askRecordText === true) {
-      const { text } = ctx.message;
-      const [themeWithSigns, ...rest] = text.split(' ');
-
-      const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-
-      const theme = themeWithSigns.match(pattern) !== null ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
-
-      const data = rest.join(' ');
-      const user = ctx.message.from.last_name;
-      const time = ctx.session.currentDate;
-
-      await ctx.replyWithHTML(
-        `Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`,
-      );
-
-      files.writeRecord(user, time, theme, data);
+      await commandList.createRecord(ctx, 'button');
     }
+
     await next();
   } catch (err) {
     await commandList.rebootBot(
@@ -671,7 +674,7 @@ bot.command(`${botCommands.image}`, (ctx) => {
 });
 
 bot.command(`${botCommands.weather}`, (ctx) => {
-  weatherRequest(ctx);
+  commandList.weatherRequest(ctx);
 });
 
 bot.command('g', async (ctx) => {
@@ -703,7 +706,7 @@ bot.command('g', async (ctx) => {
 });
 
 bot.command(`${botCommands.createNotionRecord}`, async (ctx) => {
-  await commandList.createNotionRecord(ctx);
+  await commandList.createNotionRecordCommand(ctx);
 });
 
 // --------------------------- AI-ТЕКСТ --------------------------
@@ -845,7 +848,7 @@ const checkVoice = async (ctx, text) => {
       return false;
     }
 
-    weatherRequest(ctx);
+    commandList.weatherRequest(ctx);
     return true;
   }
 
@@ -930,8 +933,6 @@ bot.on(message('voice'), async (ctx) => {
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
-
-    // throw new Error("500 Internal Server Error");
 
     // await ctx.reply(JSON.stringify(link, null, 2)); // парсим джейсон
 
