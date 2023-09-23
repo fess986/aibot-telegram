@@ -2,7 +2,7 @@ import { createReadStream } from 'fs';
 // import { Configuration, OpenAIApi } from 'openai';
 import OpenAI from 'openai';
 import config from 'config';
-import { MODELS } from './context.js';
+import { MODELS } from '../const/context.js';
 
 class OpenAIClass {
   constructor(apiKey) {
