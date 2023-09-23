@@ -16,14 +16,13 @@ import { createNotionRecord } from './API/notion.js';
 
 import {
   roles,
-  botCommands,
   INIT_SESSION,
   CONTEXT_MAX,
   CONTEXT_PROGRAMMER,
   CONTEXT_CHAT_BOT,
-  helpMessage,
-  ERROR_MESSAGES,
 } from './const/context.js';
+
+import { ERROR_MESSAGES, helpMessage, botCommands } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
