@@ -9,6 +9,7 @@ import { startMW } from './mw.js';
 
 export const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
+// стартуем бота
 bot.start(async (ctx) => {
   try {
     // ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
@@ -28,4 +29,10 @@ bot.help((ctx) => {
 
 startMW(bot); // запускаем миддлвеиры для бота из отдельного файла
 
+// Обработка полученной локации и вывод текущей погоды на экран
+bot.on('location', async (ctx) => {
+  commandList.weatherLocation(ctx);
+});
+
+// запуск бота
 bot.launch();

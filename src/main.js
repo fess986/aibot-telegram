@@ -1,5 +1,4 @@
 import fs from 'fs';
-import { Markup } from 'telegraf'; // для работы с ботом телеграмма
 import { message } from 'telegraf/filters'; // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
@@ -11,6 +10,9 @@ import { files } from './utils/files.js';
 import { Loader } from './loader/loader.js';
 import { commandList } from './commandList.js';
 import { bot } from './bot.js';
+import { contextButtons } from './buttons/contextButtons.js';
+import { bonusButtons } from './buttons/bonusButtons.js';
+import { recordButtons } from './buttons/recordButtons.js';
 
 import {
   roles,
@@ -21,156 +23,18 @@ import { ERROR_MESSAGES, botCommands } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
-// bot.use(session());
-
-// Обработка полученной локации и вывод текущей погоды на экран
-bot.on('location', async (ctx) => {
-  commandList.weatherLocation(ctx);
-});
-
+/// ----------------------------- КНОПКИ -----------------------
 // тестируем работу с кнопками. Для того чтобы всё выполнялось по порядку, делаем функцию асинхронной и потом при помощи await ожидаем выполнение очередной задачи. При этом не забываем трай-кэтч при любой асинхронщине, чтобы не крашить бота при асинхронной ошибке
 bot.command(botCommands.contextButtons, async (ctx) => {
-  try {
-    await ctx.replyWithHTML(
-      '<b>Добавление контекста:</b>',
-      Markup.inlineKeyboard([
-        [Markup.button.callback('Новый контекст!', 'new')],
-        [
-          Markup.button.callback('Макс', 'max'),
-          Markup.button.callback('Программист JS', 'programmist'),
-          Markup.button.callback('Пишем бота', 'bot'),
-        ], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
-      ]),
-    );
-
-    bot.action('max', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      commandList.contentMax(ctx1);
-    });
-
-    bot.action('programmist', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      commandList.contentProg(ctx1);
-    });
-
-    bot.action('bot', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      commandList.contentBot(ctx1);
-    });
-
-    bot.action('new', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      commandList.newSession(ctx1);
-    });
-  } catch (err) {
-    console.log(err);
-    await commandList.rebootBot(
-      ctx,
-      'ошибка работы с кнопками контекста: ',
-      err,
-    );
-  }
+  await contextButtons(ctx);
 });
 
 bot.command(botCommands.bonusButtons, async (ctx) => {
-  try {
-    await ctx.replyWithHTML(
-      '<b>Управление функциями бота:</b>',
-      Markup.inlineKeyboard([
-        [
-          Markup.button.callback('Перезагрузка бота', 'reboot'),
-          Markup.button.callback('Новый контекст', 'new'),
-        ], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
-        [Markup.button.callback('Текущая погода', 'weather')],
-        [
-          Markup.button.callback(
-            'Перевести голос в текст',
-            'createTextFromVoice',
-          ),
-        ],
-        [
-          Markup.button.callback(
-            'Дополнить текст',
-            'textCompletion',
-          ),
-        ],
-      ]),
-    );
-
-    bot.action('reboot', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      await commandList.rebootBot(
-        ctx1,
-        'Перезагрузка по запросу пользователя: ',
-      );
-    });
-
-    bot.action('weather', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      commandList.weatherRequest(ctx1);
-    });
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка работы с кнопками управления ботом: ',
-      err,
-    );
-  }
-
-  bot.action('createTextFromVoice', async (ctx1) => {
-    await ctx1.answerCbQuery();
-    ctx1.reply(
-      'Произнесите голосом текст, который вы хотите увидеть в напечатанном виде',
-    );
-    ctx.session.createTextFromVoice ??= true;
-    ctx.session.createTextFromVoice = true;
-  });
-
-  bot.action('textCompletion', async (ctx1) => {
-    await ctx1.answerCbQuery();
-    ctx1.replyWithHTML(
-      'Начните печатать текст, который вы хотите чтобы АИ дополнил. Лучше использовать <b> Английский язык </b> - так текст будет гораздо длиннее',
-    );
-    ctx1.session.createTextCompletion ??= true;
-    ctx1.session.createTextCompletion = true;
-  });
+  await bonusButtons(ctx);
 });
 
 bot.command(botCommands.recordButtons, async (ctx) => {
-  try {
-    await ctx.replyWithHTML(
-      '<b>Работа с записями:</b>',
-      Markup.inlineKeyboard([
-        [Markup.button.callback('Создать запись', 'createRecord')],
-        [Markup.button.callback('Скачать записи', 'sendRecord')],
-        [Markup.button.callback('Удалить записи', 'removeRecords')],
-      ]),
-    );
-
-    bot.action('createRecord', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      ctx1.reply(
-        'Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальные слова - текст записи.',
-      );
-      ctx1.session.askRecordText = true;
-    });
-
-    bot.action('sendRecord', async (ctx1) => {
-      // await ctx.answerCbQuery();
-      await commandList.sendRecords(ctx1, bot);
-    });
-
-    bot.action('removeRecords', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      await commandList.removeRecords(ctx1);
-    });
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка работы с кнопками управления ботом: ',
-      err,
-    );
-  }
+  await recordButtons(ctx);
 });
 
 // ----------------------ЗАПУСК КОМАНД----------------------------
