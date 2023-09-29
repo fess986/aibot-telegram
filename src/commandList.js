@@ -2,7 +2,6 @@ import { existsSync } from 'fs';
 import path from 'path';
 import config from 'config';
 import axios from 'axios';
-import { Telegraf } from 'telegraf'; // для работы с ботом телеграмма
 
 import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive } from './utils/utils.js';
@@ -15,8 +14,6 @@ import {
   CONTEXT_PROGRAMMER,
   CONTEXT_CHAT_BOT,
 } from './const/context.js';
-
-export const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 export const commandList = {
   async newSession(ctx) {
@@ -38,10 +35,18 @@ export const commandList = {
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',
       );
-      console.log(ctx.session.messages);
-      console.log(ctx.session);
+
+      // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
+      // ctx.session = Object.assign({}, INIT_SESSION) // поверхностное клонирование,  нам не подходит так как там вложенные объекты
+      // ctx.session = structuredClone(INIT_SESSION); // стандартная функция в ноде версии 17+. Так как у нас 16, нельзя использовать
+      // ctx.session = cloneDeep(INIT_SESSION); // лодэш как то странно работает с нодой
+      // console.log(ctx.session.messages)
+
+      // так в итоге работает
+      // ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
+      // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
     } catch (err) {
-      console.log('Ошибка обнуления сессии');
+      console.log('Ошибка обнуления сессии', err.message);
 
       if (!!ctx) {
         await ctx.reply('Ошибка обнуления сессии');
@@ -237,7 +242,7 @@ export const commandList = {
     }
   },
 
-  async sendRecords(ctx) {
+  async sendRecords(ctx, bot) {
     try {
       const user = (await ctx?.message?.from?.last_name) ?? ctx?.update?.callback_query?.from?.last_name ?? 'user'; // в зависимости от того, когда происходит действие, объект контекста может различаться, например если он вызывается при нажатии кнопки действия кейпада, у него не будет поля ctx.message.from , но зато будет ctx.update.callback_query.from? , поэтому мы проверяем наличие всех этих полей чтобы не схватить ошибку.
 
@@ -274,10 +279,8 @@ export const commandList = {
       const recordsPath = files.recordsPath(user);
 
       const archiveFilePath = path.join(recordsPath, '../', `${user}.zip`);
-      console.log(archiveFilePath);
       if (existsSync(archiveFilePath)) {
         removeFile(archiveFilePath);
-        console.log('есть такое дело');
       }
 
       deleteFolderRecursive(recordsPath);
