@@ -1,7 +1,5 @@
 import fs from 'fs';
-import {
-  session, Markup, Input,
-} from 'telegraf'; // для работы с ботом телеграмма
+import { Markup } from 'telegraf'; // для работы с ботом телеграмма
 import { message } from 'telegraf/filters'; // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
@@ -11,27 +9,19 @@ import { ogg } from './utils/oggToMp3.js';
 import { openAi } from './API/openai.js';
 import { files } from './utils/files.js';
 import { Loader } from './loader/loader.js';
-import { commandList, bot } from './commandList.js';
+import { commandList } from './commandList.js';
+import { bot } from './bot.js';
 
 import {
   roles,
   INIT_SESSION,
 } from './const/context.js';
 
-import { ERROR_MESSAGES, helpMessage, botCommands } from './const/const.js';
+import { ERROR_MESSAGES, botCommands } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
-// const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
-
-bot.help((ctx) => {
-  ctx.reply(helpMessage);
-});
-
-// Обработка полученной локации и вывод текущей погоды на экран
-bot.on('location', async (ctx) => {
-  commandList.weatherLocation(ctx);
-});
+// bot.use(session());
 
 // Обработка полученной локации и вывод текущей погоды на экран
 bot.on('location', async (ctx) => {
@@ -167,7 +157,7 @@ bot.command(botCommands.recordButtons, async (ctx) => {
 
     bot.action('sendRecord', async (ctx1) => {
       // await ctx.answerCbQuery();
-      await commandList.sendRecords(ctx1);
+      await commandList.sendRecords(ctx1, bot);
     });
 
     bot.action('removeRecords', async (ctx1) => {
@@ -183,155 +173,11 @@ bot.command(botCommands.recordButtons, async (ctx) => {
   }
 });
 
-// -----------------------МИДДЛВЕИРЫ---------------------------------
-
-bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
-
-// прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
-bot.use(async (ctx, next) => {
-  try {
-    const currentDate = new Date(); // получаем текущую дату и время
-
-    if (!ctx.session) {
-      // Проверяем существует ли объект ctx.session
-      ctx.session = {};
-    }
-    ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
-    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
-    // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
-
-    ctx.session.messages.push({
-      role: roles.SYSTEM,
-      content: `Системное время: ${currentDate}`,
-    });
-    console.log(ctx.session);
-
-    // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
-
-    await next(); // передаем управление следующему обработчику
-
-    // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка MW добавления системного времени в контекст разговора: ',
-      err,
-    );
-    // await next();
-  }
-});
-
-// обработка того, задан ли вопрос пользователю по поводу описания картинки
-bot.use(async (ctx, next) => {
-  try {
-    if (ctx?.session?.askImageDiscription === true) {
-      console.log(
-        'обработка запроса описания картинки',
-        ctx.session.askImageDiscription,
-      );
-
-      await ctx.replyWithHTML(
-        `Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, подождите немного... `,
-      );
-
-      const url = await openAi.image(ctx.message.text);
-
-      if (url === 'ошибка') {
-        await ctx.reply(ERROR_MESSAGES.timeOutImage);
-        ctx.session.askImageDiscription = false;
-
-        return;
-      }
-
-      await ctx.replyWithPhoto(Input.fromURL(url)); // используем специальный объект Input для того чтобы не было проблем с загрузкой картинки по url
-    }
-    await next();
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка MW обработки вопроса об описании текста картинки: ',
-      err,
-    );
-    // await next();
-  }
-});
-
-// обработка того, задан ли вопрос пользователю по поводу записи текста
-bot.use(async (ctx, next) => {
-  try {
-    if (ctx?.session?.askRecordText === true) {
-      await commandList.createRecord(ctx, 'button');
-    }
-
-    await next();
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка MW обработки вопроса о создании записи: ',
-      err,
-    );
-    // await next();
-  }
-});
-
-// обработка того, задан ли вопрос пользователю по поводу дополнения текста
-bot.use(async (ctx, next) => {
-  try {
-    if (ctx?.session?.createTextCompletion === true) {
-      const userText = ctx?.update?.message?.text || 'no text';
-
-      if (!ctx?.update?.message?.text) {
-        ctx.reply('Вы должны были ввести какой-либо текст, в следущий раз будьте чуть внимательнее!');
-        ctx.session.createTextCompletion = false;
-        return;
-      }
-
-      ctx.replyWithHTML(`создаётся продолжение вашего текста <b> ${userText} </b>`);
-      const response = await openAi.completion(userText);
-
-      if (response === 'ошибка') {
-        await ctx.reply('Вылет по таймауту. Повторите свой запрос позже');
-
-        await next();
-        return;
-      }
-
-      // eslint-disable-next-line
-      const responseText = response?.choices[0]?.text || 'По какой то причине текст не был сформирован';
-
-      await ctx.reply(responseText);
-      console.log(responseText);
-    }
-    await next();
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка MW обработки дополнения текста ',
-      err,
-    );
-    // await next();
-  }
-});
-
-// -------------------------СТАРТ БОТА--------------------------
-
-bot.start(async (ctx) => {
-  try {
-    // ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
-    ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
-    ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
-    await ctx.reply(
-      'Добро пожаловать в наш бот! Введите /help чтобы узнать подробнее о его возможностях.',
-    );
-  } catch (err) {
-    await commandList.rebootBot(ctx, 'ошибка при старте бота: ', err);
-  }
-});
-
 // ----------------------ЗАПУСК КОМАНД----------------------------
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command(`${botCommands.new}`, async (ctx) => {
+  console.log(ctx);
   commandList.newSession(ctx);
 
   // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
@@ -350,7 +196,7 @@ bot.command(`${botCommands.record}`, async (ctx) => {
 });
 
 bot.command(botCommands.sendRecords, async (ctx) => {
-  commandList.sendRecords(ctx);
+  commandList.sendRecords(ctx, bot);
 });
 
 bot.command(botCommands.removeRecords, async (ctx) => {
@@ -660,8 +506,6 @@ bot.on(message('voice'), async (ctx) => {
     }
   }
 });
-
-bot.launch();
 
 // global.process
 
