@@ -7,6 +7,7 @@ import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive } from './utils/utils.js';
 
 import { createNotionRecord } from './API/notion.js';
+import { createNotionTODO } from './API/notionTODO.js';
 
 import {
   INIT_SESSION,
@@ -299,11 +300,12 @@ export const commandList = {
   },
 
   // создание записи в ноушн
-  async createNotionRecordCommand(ctx, mode = 'command') {
+  async createNotionRecordCommand(ctx, mode = 'command', target = 'note') {
     try {
       const { text } = ctx.message;
 
       let notionText;
+      let response;
 
       switch (mode) {
         case 'command':
@@ -318,53 +320,34 @@ export const commandList = {
           [...notionText] = text.split(' ');
       }
 
-      // const [, ...rest] = text.split(' ');
-
       if (notionText.length === 0) {
         await ctx.reply('Пустой запрос, повторите еще раз');
         return;
       }
 
       const data = notionText.join(' ');
-      const response = await createNotionRecord(data);
+
+      switch (target) {
+        case 'note':
+          response = await createNotionRecord(data);
+          break;
+
+        case 'todo':
+          response = await createNotionTODO(data);
+          break;
+
+        default:
+          response = await createNotionRecord(data);
+      }
+
+      // const response = await createNotionRecord(data);
       await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
-
-      // const { text } = ctx.message;
-
-      // let themeWithSigns;
-      // let rest;
-
-      // switch (mode) {
-      //   case 'default':
-      //     [, themeWithSigns, ...rest] = text.split(' ');
-      //     break;
-
-      //   case 'button':
-      //     [themeWithSigns, ...rest] = text.split(' ');
-      //     break;
-
-      //   default:
-      //     [, themeWithSigns, ...rest] = text.split(' ');
-      // }
-
-      // const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-      // const theme = themeWithSigns.match(pattern) !== null ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
-
-      // const data = rest.join(' ');
-      // const user = ctx.message.from.last_name;
-      // const time = ctx.session.currentDate;
-
-      // files.writeRecord(user, time, theme, data);
-
-      // await ctx.replyWithHTML(
-      //   `Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`,
-      // );
     } catch (err) {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
   },
 
-  // создание записи в ноушн
+  // создание записи в ноушн при помощи голосовой команды "ЗАПИСЬ В БЛОКНОТ ..."
   async createNotionVoiceCommand(ctx, data) {
     try {
       const response = await createNotionRecord(data);
@@ -373,4 +356,15 @@ export const commandList = {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
   },
+
+  // создание записи в ноушн при помощи голосовой команды "ЗАПИСЬ В СПИСОК ..."
+  async createNotionTODOVoiceCommand(ctx, data) {
+    try {
+      const response = await createNotionTODO(data);
+      await ctx.reply(`Создана новая запись в notion TODO List. Ссылка на неё: ${response.url}`);
+    } catch (err) {
+      console.log('ошибка добавление записи в ноушен TODO List', err.message);
+    }
+  },
+
 };
