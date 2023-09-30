@@ -271,21 +271,34 @@ const checkVoice = async (ctx, text) => {
 
   // запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...".
   if (firstWord.toLowerCase().startsWith('запис')) {
-    const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-    const theme = forthWord.match(pattern) !== null ? forthWord.match(pattern)[0].toLowerCase() : 'default';
-    const user = ctx.message.from.last_name;
-    const time = ctx.session.currentDate;
+    if ((thirdWord).toLowerCase().startsWith('тем')) {
+      const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+      const theme = forthWord.match(pattern) !== null ? forthWord.match(pattern)[0].toLowerCase() : 'default';
+      const user = ctx.message.from.last_name;
+      const time = ctx.session.currentDate;
 
-    files.writeRecord(user, time, theme, text);
+      files.writeRecord(user, time, theme, text);
 
-    ctx.reply(`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`, {
-      parse_mode: 'HTML',
-    });
+      ctx.reply(`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`, {
+        parse_mode: 'HTML',
+      });
 
-    return true;
+      return true;
+    }
   }
 
-  // если ни одна проверка не сработала, возвращаем false для дальнейшей передачи сообщения АИ
+  // запись сообщения в notion, которое начинается с фразы "ЗАПИСЬ В БЛОКНОТ ...".
+  if (firstWord.toLowerCase().startsWith('запис')) {
+    if ((thirdWord).toLowerCase().startsWith('блок')) {
+      const notionText = `${forthWord} ${rest.join(' ')}`;
+      await commandList.createNotionVoiceCommand(ctx, notionText);
+      await ctx.reply(notionText);
+
+      return true;
+    }
+  }
+
+  //   // если ни одна проверка не сработала, возвращаем false для дальнейшей передачи сообщения АИ
   return false;
 };
 
