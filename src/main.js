@@ -13,6 +13,7 @@ import { bot } from './bot.js';
 import { contextButtons } from './buttons/contextButtons.js';
 import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
+import { notionButtons } from './buttons/notionButtons.js';
 
 import {
   roles,
@@ -35,6 +36,10 @@ bot.command(botCommands.bonusButtons, async (ctx) => {
 
 bot.command(botCommands.recordButtons, async (ctx) => {
   await recordButtons(ctx);
+});
+
+bot.command(botCommands.notionButtons, async (ctx) => {
+  await notionButtons(ctx);
 });
 
 // ----------------------ЗАПУСК КОМАНД----------------------------
@@ -94,37 +99,37 @@ bot.command(`${botCommands.weather}`, (ctx) => {
   commandList.weatherRequest(ctx);
 });
 
-bot.command('g', async (ctx) => {
-  try {
-    ctx.reply('скачиваем контекст из гитхаба');
-
-    const owner = 'fess986';
-    const repo = 'aibot-telegram';
-    const url = `https://api.github.com/repos/${owner}/${repo}/tarball`;
-
-    axios
-      .get(url, {
-        responseType: 'stream',
-        headers: {
-          accept: 'application/vnd.github.v3+json',
-          authorization: 'Bearer [token]',
-        },
-      })
-      .then((response) => {
-        response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
-      });
-  } catch (err) {
-    await commandList.rebootBot(
-      ctx,
-      'ошибка скачивания проекта с гитхаба: ',
-      err,
-    );
-  }
-});
-
 bot.command(`${botCommands.createNotionRecord}`, async (ctx) => {
   await commandList.createNotionRecordCommand(ctx);
 });
+
+// bot.command('g', async (ctx) => {
+//   try {
+//     ctx.reply('скачиваем контекст из гитхаба');
+
+//     const owner = 'fess986';
+//     const repo = 'aibot-telegram';
+//     const url = `https://api.github.com/repos/${owner}/${repo}/tarball`;
+
+//     axios
+//       .get(url, {
+//         responseType: 'stream',
+//         headers: {
+//           accept: 'application/vnd.github.v3+json',
+//           authorization: 'Bearer [token]',
+//         },
+//       })
+//       .then((response) => {
+//         response.data.pipe(fs.createWriteStream(`./${repo}.tar.gz`));
+//       });
+//   } catch (err) {
+//     await commandList.rebootBot(
+//       ctx,
+//       'ошибка скачивания проекта с гитхаба: ',
+//       err,
+//     );
+//   }
+// });
 
 // --------------------------- AI-ТЕКСТ --------------------------
 // учим бота общаться через текст
@@ -139,11 +144,12 @@ bot.on(message('text'), async (ctx) => {
   }
 
   if (
-    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true
+    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true
   ) {
     ctx.session.askImageDiscription = false;
     ctx.session.askRecordText = false;
     ctx.session.createTextCompletion = false;
+    ctx.session.askNotionRecord = false;
     return;
   }
 

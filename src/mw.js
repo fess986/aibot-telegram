@@ -96,6 +96,23 @@ export const startMW = (bot) => {
     }
   });
 
+  // обработка того, задан ли вопрос пользователю по поводу записи текста в notion
+  bot.use(async (ctx, next) => {
+    try {
+      if (ctx?.session?.askNotionRecord === true) {
+        await commandList.createNotionRecordCommand(ctx, 'button');
+      }
+      await next();
+    } catch (err) {
+      await commandList.rebootBot(
+        ctx,
+        'ошибка MW обработки вопроса о создании записи: ',
+        err,
+      );
+      await next();
+    }
+  });
+
   // обработка того, задан ли вопрос пользователю по поводу дополнения текста
   bot.use(async (ctx, next) => {
     try {
