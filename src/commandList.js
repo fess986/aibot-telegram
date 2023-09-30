@@ -315,4 +315,14 @@ export const commandList = {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
   },
+
+  // создание записи в ноушн
+  async createNotionVoiceCommand(ctx, data) {
+    try {
+      const response = await createNotionRecord(data);
+      await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
+    } catch (err) {
+      console.log('ошибка добавление записи в ноушен', err.message);
+    }
+  },
 };
