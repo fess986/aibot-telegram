@@ -1,8 +1,6 @@
-import fs from 'fs';
 import { message } from 'telegraf/filters'; // помогает работать с текстом/голосом телеграмма
 import { code } from 'telegraf/format'; // специальная фишка, которая меняет формат сообщения. Нам нужна, чтобы системные сообщения отличались
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
-import axios from 'axios';
 
 import { ogg } from './utils/oggToMp3.js';
 import { openAi } from './API/openai.js';
@@ -101,6 +99,10 @@ bot.command(`${botCommands.weather}`, (ctx) => {
 
 bot.command(`${botCommands.createNotionRecord}`, async (ctx) => {
   await commandList.createNotionRecordCommand(ctx);
+});
+
+bot.command(`${botCommands.createNotionTODO}`, async (ctx) => {
+  await commandList.createNotionRecordCommand(ctx, 'default', 'todo');
 });
 
 // bot.command('g', async (ctx) => {
@@ -299,7 +301,16 @@ const checkVoice = async (ctx, text) => {
       const notionText = `${forthWord} ${rest.join(' ')}`;
       await commandList.createNotionVoiceCommand(ctx, notionText);
       await ctx.reply(notionText);
+      return true;
+    }
+  }
 
+  // запись сообщения в notion, которое начинается с фразы "ЗАПИСЬ В БЛОКНОТ ...".
+  if (firstWord.toLowerCase().startsWith('запис')) {
+    if ((thirdWord).toLowerCase().startsWith('спис')) {
+      const notionText = `${forthWord} ${rest.join(' ')}`;
+      await commandList.createNotionTODOVoiceCommand(ctx, notionText);
+      await ctx.reply(notionText);
       return true;
     }
   }
