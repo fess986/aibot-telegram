@@ -1,3 +1,12 @@
+// eslint-disable-next-line no-unused-vars
+const botMenu = `
+help - Справка
+context -    Контекст общения
+records -  Записи
+bonus -    Дополнительные возможности
+notion -    Работа с ноушеном. Ограниченный функционал
+`; // данная переменная действительно не используется напрямую в проекте, но она нужна для того чтобы быстро и оперативно править менюшку бота в телеграмме
+
 export const roles = {
   ASSISTANT: 'assistant',
   USER: 'user',

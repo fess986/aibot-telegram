@@ -31,6 +31,8 @@ export const commandList = {
       ctx.session.askRecordText = false;
       ctx.session.createTextCompletion = ctx.session.createTextCompletion || false;
       ctx.session.createTextCompletion = false;
+      ctx.session.askNotionRecord = ctx.session.askNotionRecord || false;
+      ctx.session.askNotionRecord = false;
 
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',
@@ -297,20 +299,66 @@ export const commandList = {
   },
 
   // создание записи в ноушн
-  async createNotionRecordCommand(ctx) {
+  async createNotionRecordCommand(ctx, mode = 'command') {
     try {
       const { text } = ctx.message;
 
-      const [, ...rest] = text.split(' ');
+      let notionText;
 
-      if (rest.length === 0) {
+      switch (mode) {
+        case 'command':
+          [, ...notionText] = text.split(' ');
+          break;
+
+        case 'button':
+          [...notionText] = text.split(' ');
+          break;
+
+        default:
+          [...notionText] = text.split(' ');
+      }
+
+      // const [, ...rest] = text.split(' ');
+
+      if (notionText.length === 0) {
         await ctx.reply('Пустой запрос, повторите еще раз');
         return;
       }
 
-      const data = rest.join(' ');
+      const data = notionText.join(' ');
       const response = await createNotionRecord(data);
       await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
+
+      // const { text } = ctx.message;
+
+      // let themeWithSigns;
+      // let rest;
+
+      // switch (mode) {
+      //   case 'default':
+      //     [, themeWithSigns, ...rest] = text.split(' ');
+      //     break;
+
+      //   case 'button':
+      //     [themeWithSigns, ...rest] = text.split(' ');
+      //     break;
+
+      //   default:
+      //     [, themeWithSigns, ...rest] = text.split(' ');
+      // }
+
+      // const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
+      // const theme = themeWithSigns.match(pattern) !== null ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
+
+      // const data = rest.join(' ');
+      // const user = ctx.message.from.last_name;
+      // const time = ctx.session.currentDate;
+
+      // files.writeRecord(user, time, theme, data);
+
+      // await ctx.replyWithHTML(
+      //   `Ваш текст : <b>"${data}"</b> - сохранен в папке <b>"${theme}"</b>.`,
+      // );
     } catch (err) {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
