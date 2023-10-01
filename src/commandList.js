@@ -34,6 +34,8 @@ export const commandList = {
       ctx.session.createTextCompletion = false;
       ctx.session.askNotionRecord = ctx.session.askNotionRecord || false;
       ctx.session.askNotionRecord = false;
+      ctx.session.askNotionTODO = ctx.session.askNotionTODO || false;
+      ctx.session.askNotionTODO = false;
 
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',
