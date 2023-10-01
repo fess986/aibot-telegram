@@ -5,7 +5,7 @@ import config from 'config'; // для того чтобы можно было �
 import { ogg } from './utils/oggToMp3.js';
 import { openAi } from './API/openai.js';
 import { files } from './utils/files.js';
-import { Loader } from './loader/loader.js';
+// import { Loader } from './loader/loader.js';
 import { commandList } from './commandList.js';
 import { bot } from './bot.js';
 import { contextButtons } from './buttons/contextButtons.js';
@@ -146,25 +146,27 @@ bot.on(message('text'), async (ctx) => {
   }
 
   if (
-    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true
+    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true || ctx?.session?.askNotionTODO === true
   ) {
     ctx.session.askImageDiscription = false;
     ctx.session.askRecordText = false;
     ctx.session.createTextCompletion = false;
     ctx.session.askNotionRecord = false;
+    ctx.session.askNotionTODO = false;
     return;
   }
 
   try {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
-    const textLoader = new Loader(ctx);
+    // const textLoader = new Loader(ctx);
 
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     console.log(ctx.message.text);
+    console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
 
-    textLoader.show();
+    // textLoader.show();
 
     const response = await openAi.chat(ctx.session.messages);
 
@@ -194,7 +196,7 @@ bot.on(message('text'), async (ctx) => {
       content: response.content,
     });
 
-    textLoader.hide();
+    // textLoader.hide();
 
     await ctx.reply(response.content);
 
@@ -310,7 +312,6 @@ const checkVoice = async (ctx, text) => {
     if ((thirdWord).toLowerCase().startsWith('спис')) {
       const notionText = `${forthWord} ${rest.join(' ')}`;
       await commandList.createNotionTODOVoiceCommand(ctx, notionText);
-      await ctx.reply(notionText);
       return true;
     }
   }
@@ -354,8 +355,8 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
-    const voiceAnswerLoader = new Loader(ctx);
-    voiceAnswerLoader.show();
+    // const voiceAnswerLoader = new Loader(ctx);
+    // voiceAnswerLoader.show();
 
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
@@ -376,7 +377,7 @@ bot.on(message('voice'), async (ctx) => {
       content: response.content,
     });
 
-    voiceAnswerLoader.hide();
+    // voiceAnswerLoader.hide();
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
