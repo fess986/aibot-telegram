@@ -10,7 +10,7 @@ const createShortText = (text, maxLength) => ((text.length > maxLength) ? `${tex
 export async function createNotionRecord(text) {
   const shortText = createShortText(text, 68);
 
-  const response = await notion.pages.create({
+  const table = await notion.pages.create({
     parent: { database_id: config.get('NOTION_RECORDS_DB_ID') },
     properties: {
       'Сокращенная запись': { // обращаемся к нужному полю по имени
@@ -31,7 +31,7 @@ export async function createNotionRecord(text) {
   });
 
   await notion.blocks.children.append({
-    block_id: response.id, // обратились созданному нами респонсу
+    block_id: table.id, // обратились созданному нами блоку в таблице
     children: [
       {
         object: 'block',
@@ -51,5 +51,22 @@ export async function createNotionRecord(text) {
     ],
   });
 
-  return response;
+  return table;
+}
+
+// поиск страниц и баз данных. Параметры поиска и сортировки изрядно отсасывают у notion.databases.query, поэтому использовать не будем
+// https://developers.notion.com/reference/post-search
+export async function getNotionPageSeach() {
+  const response = await notion.search({
+    // query: 'External tasks',
+    // filter: {
+    //   value: 'database',
+    //   property: 'object'
+    // },
+    sort: {
+      direction: 'ascending',
+      timestamp: 'last_edited_time',
+    },
+  });
+  console.log(response);
 }
