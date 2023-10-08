@@ -47,6 +47,10 @@ export function fromWho(id) {
       userName = 'Максим Карпов';
       break;
 
+    case 283344125:
+      userName = 'Царьков санёк';
+      break;
+
     default:
       userName = `неизвестный id = ${id}`;
   }

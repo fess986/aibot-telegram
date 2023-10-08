@@ -4,7 +4,7 @@ import config from 'config';
 import axios from 'axios';
 
 import { files } from './utils/files.js';
-import removeFile, { deleteFolderRecursive } from './utils/utils.js';
+import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
 
 import { createNotionRecord } from './API/notion.js';
 import { createNotionTODO } from './API/notionTODO.js';
@@ -19,7 +19,9 @@ import {
 export const commandList = {
   async newSession(ctx) {
     try {
-      console.log('Обнуление сессии...');
+      console.log('..............Обнуление сессии...............');
+      console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+      console.log('обнуление произвел - ', fromWho(ctx?.message?.from?.id));
       ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
       ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
