@@ -26,7 +26,7 @@ export const startMW = (bot) => {
         role: roles.SYSTEM,
         content: `Системное время: ${currentDate}`,
       });
-      console.log(ctx.session);
+      // console.log(ctx.session);
 
       // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
 
