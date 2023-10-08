@@ -48,7 +48,7 @@ bot.command(botCommands.notionButtons, async (ctx) => {
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command(`${botCommands.new}`, async (ctx) => {
-  console.log(ctx);
+  // console.log(ctx);
   commandList.newSession(ctx);
 
   // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
@@ -179,7 +179,8 @@ bot.on(message('text'), async (ctx) => {
 
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
-    console.log(ctx.message.text);
+    // console.log(ctx.message.text);
+    console.log(`................Вопрос пользователя ................ : \n ${ctx.message.text}`);
     console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
     console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
     console.log('текущая длинна сессии - ', ctx.session.sessionLength);
@@ -198,10 +199,6 @@ bot.on(message('text'), async (ctx) => {
       return;
     }
 
-    console.log(
-      'текст обработан аи...................................................',
-    );
-
     if (!response) {
       await ctx.reply(ERROR_MESSAGES.noResponse);
       console.log('ошибка ответа chatGPT');
@@ -217,8 +214,7 @@ bot.on(message('text'), async (ctx) => {
     // textLoader.hide();
 
     await ctx.reply(response.content);
-
-    console.log(response.content);
+    console.log(`................Ответ полученный от AI................ : \n ${response.content}`);
   } catch (err) {
     if (err) {
       await commandList.rebootBot(
@@ -373,12 +369,19 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
+    ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
+
     // const voiceAnswerLoader = new Loader(ctx);
     // voiceAnswerLoader.show();
 
     // const messages = [{role: openAi.roles.USER, content: text}] // передавать будем не только само сообщенеие но и роль и прочий контекст - так мы делаем если не сохраняем контент а сразу кидаем в мессаджи
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: text });
+
+    console.log(`................Голосовой вопрос пользователя ................ : \n ${text}`);
+    console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
+    console.log('текущая длинна сессии - ', ctx.session.sessionLength);
 
     const response = await openAi.chat(ctx.session.messages);
 
@@ -399,7 +402,7 @@ bot.on(message('voice'), async (ctx) => {
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
-
+    console.log(`................Голосовой ответ полученный от AI................ : \n ${response.content}`);
     // await ctx.reply(JSON.stringify(link, null, 2)); // парсим джейсон
 
     // console.log(link); // тут мы понимаем, что стринглифай немного неправильно приводит объект к строке. на самом деле это действительно полноценный объект с полем href которое нас будет интересовать в дальнейшем
