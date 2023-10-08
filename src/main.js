@@ -3,8 +3,9 @@ import { code } from 'telegraf/format'; // специальная фишка, к
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 
 import { ogg } from './utils/oggToMp3.js';
-import { openAi } from './API/openai.js';
 import { files } from './utils/files.js';
+import { fromWho } from './utils/utils.js';
+import { openAi } from './API/openai.js';
 // import { Loader } from './loader/loader.js';
 import { commandList } from './commandList.js';
 import { bot } from './bot.js';
@@ -173,13 +174,15 @@ bot.on(message('text'), async (ctx) => {
 
   try {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
-
+    ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
     // const textLoader = new Loader(ctx);
 
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     console.log(ctx.message.text);
     console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
+    console.log('текущая длинна сессии - ', ctx.session.sessionLength);
 
     // textLoader.show();
 

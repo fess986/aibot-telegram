@@ -26,3 +26,30 @@ export function deleteFolderRecursive(path) {
     fs.rmdirSync(path);
   }
 }
+
+export function fromWho(id) {
+  if (!id) {
+    return 'пользователь без id';
+  }
+
+  let userName = '';
+
+  switch (id) {
+    case 525755965:
+      userName = 'Андрей Симкин';
+      break;
+
+    case 1052290682:
+      userName = 'Какой то - Kinet AI';
+      break;
+
+    case 386148581:
+      userName = 'Максим Карпов';
+      break;
+
+    default:
+      userName = `неизвестный id = ${id}`;
+  }
+
+  return userName;
+}
