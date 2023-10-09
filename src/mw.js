@@ -4,11 +4,38 @@ import { INIT_SESSION, roles } from './const/context.js';
 import { commandList } from './commandList.js';
 import { openAi } from './API/openai.js';
 import { ERROR_MESSAGES } from './const/const.js';
+import { accessIsAllowed } from './utils/utils.js';
 
 // прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
 
 export const startMW = (bot) => {
   bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
+
+  bot.use(async (ctx, next) => {
+    try {
+      // письмо пользователю МАРТ
+      if (ctx?.message?.from?.id === 6083583477) {
+        await ctx.reply('Здравствуйте, Март, это программист данного бота - Карпов Максим! ');
+        await ctx.reply('Эту запись добавил специально для Вас!');
+        await ctx.reply('Дело в том, что этот бот изначально создавался для меня и моих знакомых, а сейчас я начал замечать, что он используется большим количеством людей, что совсем не планировалось. Поэтому в ближайшее время я планирую включить ограничение доступа. Если вы меня знаете, или просто хотели бы продолжить использовать бота, напишите мне в телегу или вацап, мой номер 8-906-598-71-86. Вы вроде тоже занимаетесь программированием, поэтому просто так не хочу вас удалять ');
+      }
+
+      console.log(`Пользователь в разрешенном списке? - ${accessIsAllowed(ctx?.message?.from?.id)}`);
+      // accessIsAllowed(ctx?.message?.from?.id);
+
+      if (true) {
+        await next();
+      }
+
+    } catch (err) {
+      await commandList.rebootBot(
+        ctx,
+        'ошибка MW ограничения бот-листа: ',
+        err,
+      );
+      await next();
+    }
+  });
 
   bot.use(async (ctx, next) => {
     try {

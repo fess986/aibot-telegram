@@ -1,5 +1,6 @@
 import { unlink } from 'fs/promises';
 import fs from 'fs';
+import config from 'config';
 
 // функция для удаления файла по его пути в файловой системе
 export default async function removeFile(path) {
@@ -27,6 +28,12 @@ export function deleteFolderRecursive(path) {
   }
 }
 
+export function accessIsAllowed(id) {
+  const allowedUsers = config.get('ALLOWED_USERS');
+  const allowedUsersSet = new Set(allowedUsers);
+  return allowedUsersSet.has(id);
+}
+
 export function fromWho(id) {
   if (!id) {
     return 'пользователь без id';
@@ -35,7 +42,7 @@ export function fromWho(id) {
   let userName = '';
 
   switch (id) {
-    case 525755965:
+    case 525755965: // добавлен
       userName = 'Андрей Симкин';
       break;
 
@@ -43,12 +50,12 @@ export function fromWho(id) {
       userName = 'Какой то - Kinet AI';
       break;
 
-    case 386148581:
+    case 386148581:// добавлен
       userName = 'Максим Карпов';
       break;
 
-    case 283344125:
-      userName = 'Царьков санёк';
+    case 283344125:// добавлен
+      userName = 'Царьков Cанёк';
       break;
 
     default:
