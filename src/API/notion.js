@@ -57,16 +57,20 @@ export async function createNotionRecord(text) {
 // поиск страниц и баз данных. Параметры поиска и сортировки изрядно отсасывают у notion.databases.query, поэтому использовать не будем
 // https://developers.notion.com/reference/post-search
 export async function getNotionPageSeach() {
-  const response = await notion.search({
+  try {
+    const response = await notion.search({
     // query: 'External tasks',
     // filter: {
     //   value: 'database',
     //   property: 'object'
     // },
-    sort: {
-      direction: 'ascending',
-      timestamp: 'last_edited_time',
-    },
-  });
-  console.log(response);
+      sort: {
+        direction: 'ascending',
+        timestamp: 'last_edited_time',
+      },
+    });
+    console.log(response);
+  } catch (err) {
+    console.log('Ошибка выгрузки данных из notion-блокнота: ', err.message);
+  }
 }

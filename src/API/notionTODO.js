@@ -57,19 +57,23 @@ export async function createNotionTODO(text) {
 // описание функции https://developers.notion.com/reference/post-database-query
 // возможные сортировки https://developers.notion.com/reference/post-database-query-filter
 export async function queryDatabase() {
-  console.log('Querying database...');
-  // This query will filter database entries and return pages that have a "Last ordered" property that is more recent than 2022-12-31. Use multiple filters with the AND/OR options: https://developers.notion.com/reference/post-database-query-filter.
-  const lastOrderedIn2023 = await notionTODO.databases.query({
-    database_id: config.get('NOTION_TODO_LIST_DB_ID'),
-    filter: {
-      property: 'Дата создания',
-      date: {
-        after: '2022-12-31',
+  try {
+    console.log('Querying database...');
+    // This query will filter database entries and return pages that have a "Last ordered" property that is more recent than 2022-12-31. Use multiple filters with the AND/OR options: https://developers.notion.com/reference/post-database-query-filter.
+    const lastOrderedIn2023 = await notionTODO.databases.query({
+      database_id: config.get('NOTION_TODO_LIST_DB_ID'),
+      filter: {
+        property: 'Дата создания',
+        date: {
+          after: '2022-12-31',
+        },
       },
-    },
-  });
+    });
 
-  // Print filtered results
-  console.log('Pages with the "Last ordered" date after 2022-12-31:');
-  console.log(lastOrderedIn2023);
+    // Print filtered results
+    console.log('Pages with the "Last ordered" date after 2022-12-31:');
+    console.log(lastOrderedIn2023);
+  } catch (error) {
+    console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+  }
 }
