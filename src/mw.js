@@ -26,7 +26,6 @@ export const startMW = (bot) => {
       if (true) {
         await next();
       }
-
     } catch (err) {
       await commandList.rebootBot(
         ctx,
