@@ -44,13 +44,13 @@ class OpenAIClass {
       // для исключения ошибки по таймауту, мы будем проводить "гонку" между нашим сетевым запросом и промисом-заглушкой с обычным таймером на нужную нам величину. Обычно он падает после запроса на 90000ms (90 сек), но мы поставим поменьше, например на 60 сек
 
       const timePromise = new Promise((resolve) => {
-        setTimeout(() => resolve('ошибка'), 80000);
+        setTimeout(() => resolve('ошибка'), 85000);
       });
 
       const responsePromise = this.openai.chat.completions.create({
         model: MODELS.gpt3_5, // модель. в будущем будет доступна еще версия с 4 чатом
-        messages,
-        temperature: 0.5, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
+        messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
+        temperature: 0.5,
       });
 
       // ждем ответа от чата.
@@ -76,7 +76,8 @@ class OpenAIClass {
       });
 
       const responsePromise = this.openai.completions.create({
-        model: MODELS.davinci,
+        // model: MODELS.davinci, - раньше пользовались этой моделью
+        model: MODELS.gpt_instruct,
         prompt: message,
         temperature,
         max_tokens: maxTokens,

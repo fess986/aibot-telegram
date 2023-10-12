@@ -13,7 +13,12 @@ export const roles = {
   SYSTEM: 'system',
 };
 
-export const INIT_SESSION = [];
+export const INIT_SESSION = [
+  {
+    role: roles.SYSTEM,
+    content: 'нужен максимално быстрый ответ на запрос',
+  },
+];
 
 export const CONTEXT_MAX = {
   role: roles.USER,

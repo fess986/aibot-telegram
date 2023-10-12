@@ -1,9 +1,18 @@
 import { Markup } from 'telegraf';
+import config from 'config';
+
 import { bot } from '../bot.js';
 import { commandList } from '../commandList.js';
 
+const myId = config.get('ALLOWED_USERS')[0];
+
 export const notionButtons = async (ctx) => {
   try {
+    if (myId !== ctx?.message?.from?.id) {
+      ctx.reply('Извините, данная функция для вас не доступна');
+      return;
+    }
+
     await ctx.replyWithHTML(
       '<b>Добавление контекста:</b>',
       Markup.inlineKeyboard([
@@ -16,6 +25,7 @@ export const notionButtons = async (ctx) => {
 
     bot.action('notionNote', async (ctx1) => {
       await ctx1.answerCbQuery();
+
       ctx1.reply(
         'Введите сообщение для записи в notion.',
       );
