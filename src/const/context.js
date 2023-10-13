@@ -50,6 +50,27 @@ export const CONTEXT_CHAT_BOT = {
   бот умеет работать с сессиями и сохраняет весь контекст входных данных и ответов аи. 
   bot.use(session());
 
+  Так же он умеет работать с notion api. 
+  Инициализируется так import { Client } from '@notionhq/client'; // версия "@notionhq/client": "^2.2.13"
+  const notion = new Client({
+    auth: config.get('NOTION_RECORDS_KEY'),
+  });
+
+  Делаем запись в БД:
+  export async function createNotionRecord(text) {
+    const table = await notion.pages.create({
+      parent: { database_id: config.get('NOTION_RECORDS_DB_ID') },
+      properties: { // поля бд }
+      }}
+  
+  Забираем данные из бд:
+  export async function queryDatabase() { 
+    const lastOrderedIn2023 = await notionTODO.databases.query({
+      database_id: config.get('NOTION_TODO_LIST_DB_ID'), 
+      // фильтры и сортировка
+    return lastOrderedIn2023
+    }}
+
   нужна помощь для написания кода для бота.
   `,
 };

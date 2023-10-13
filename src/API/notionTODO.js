@@ -62,18 +62,34 @@ export async function queryDatabase() {
     // This query will filter database entries and return pages that have a "Last ordered" property that is more recent than 2022-12-31. Use multiple filters with the AND/OR options: https://developers.notion.com/reference/post-database-query-filter.
     const lastOrderedIn2023 = await notionTODO.databases.query({
       database_id: config.get('NOTION_TODO_LIST_DB_ID'),
+      // filter: {
+      //   property: 'Дата создания',
+      //   date: {
+      //     after: '2022-12-31',
+      //   },
+      // },
       filter: {
-        property: 'Дата создания',
-        date: {
-          after: '2022-12-31',
+        property: 'Выполнение', // Замени на имя свойства чекбокса
+        checkbox: {
+          equals: false, // Фильтр для невыполненных записей
         },
       },
+
+      sorts: [
+        {
+          property: 'Дата создания', // Замени на имя свойства с датой создания
+          direction: 'descending', // Сортировка от новых к старым
+        },
+      ],
+      page_size: 10, // Лимит записей
     });
 
-    // Print filtered results
-    console.log('Pages with the "Last ordered" date after 2022-12-31:');
-    console.log(lastOrderedIn2023);
+    // console.log(lastOrderedIn2023.results[0].url);
+
+    const textList = lastOrderedIn2023.results.map((item) => `${item.properties['Задача'].title[0].plain_text} --- ${item.url}`);
+    return textList;
   } catch (error) {
     console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    return 'error';
   }
 }

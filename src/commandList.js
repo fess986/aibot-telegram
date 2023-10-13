@@ -7,7 +7,7 @@ import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
 
 import { createNotionRecord } from './API/notion.js';
-import { createNotionTODO } from './API/notionTODO.js';
+import { createNotionTODO, queryDatabase } from './API/notionTODO.js';
 
 import {
   INIT_SESSION,
@@ -369,7 +369,18 @@ export const commandList = {
       const response = await createNotionTODO(data);
       await ctx.reply(`Создана новая запись в notion TODO List. Ссылка на неё: ${response.url}`);
     } catch (err) {
-      console.log('ошибка добавление записи в ноушен TODO List', err.message);
+      console.log('ошибка добавления записи в ноушен TODO List', err.message);
+    }
+  },
+
+  // получение из ноушена записей из TODO LIST-а
+  async getNotionTODO(ctx) {
+    try {
+      const list = await queryDatabase();
+      const formattedList = list.join('\n');
+      ctx.reply(formattedList);
+    } catch (err) {
+      console.log('ошибка получения записей из ноушен - TODO List - а', err.message);
     }
   },
 

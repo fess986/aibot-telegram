@@ -19,25 +19,31 @@ export const notionButtons = async (ctx) => {
         [Markup.button.callback('Запись в noton-блокнот', 'notionNote')],
         [
           Markup.button.callback('Запись в noton TODO list', 'notionTODO'),
-        ], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
+        ],
+        [Markup.button.callback('Получить записи из TODO', 'getNotionTodo')],
       ]),
     );
 
-    bot.action('notionNote', async (ctx1) => {
-      await ctx1.answerCbQuery();
+    bot.action('notionNote', async (context) => {
+      await context.answerCbQuery();
 
-      ctx1.reply(
+      context.reply(
         'Введите сообщение для записи в notion.',
       );
-      ctx1.session.askNotionRecord = true;
+      context.session.askNotionRecord = true;
     });
 
-    bot.action('notionTODO', async (ctx1) => {
-      await ctx1.answerCbQuery();
-      ctx1.reply(
+    bot.action('notionTODO', async (context) => {
+      await context.answerCbQuery();
+      context.reply(
         'Введите сообщение для записи в notion.',
       );
-      ctx1.session.askNotionTODO = true;
+      context.session.askNotionTODO = true;
+    });
+
+    bot.action('getNotionTodo', async (context) => {
+      await context.answerCbQuery();
+      await commandList.getNotionTODO(context);
     });
   } catch (err) {
     console.log(err);
