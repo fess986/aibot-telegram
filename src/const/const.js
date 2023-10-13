@@ -45,6 +45,8 @@ export const botCommands = {
 
   createNotionRecord: 'nr',
   createNotionTODO: 'nt',
+  getNotionTODO: 'gnt',
+  getNotionRecords: 'gnr',
 };
 
 export const MODELS = {

@@ -14,7 +14,6 @@ import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
-import { queryDatabase } from './API/notionTODO.js';
 import { getNotionPageSeach } from './API/notion.js';
 
 import {
@@ -115,10 +114,8 @@ bot.command('g', async (ctx) => {
   console.log(page);
 });
 
-bot.command('q', async (ctx) => {
-  await queryDatabase();
-  ctx.reply('получена страница');
-  // console.log(page);
+bot.command(`${botCommands.getNotionTODO}`, async (ctx) => {
+  await commandList.getNotionTODO(ctx);
 });
 
 // bot.command('g', async (ctx) => {
