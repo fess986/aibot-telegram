@@ -17,9 +17,8 @@ export const notionButtons = async (ctx) => {
       '<b>Добавление контекста:</b>',
       Markup.inlineKeyboard([
         [Markup.button.callback('Запись в noton-блокнот', 'notionNote')],
-        [
-          Markup.button.callback('Запись в noton TODO list', 'notionTODO'),
-        ],
+        [Markup.button.callback('Запись в noton TODO list', 'notionTODO')],
+        [Markup.button.callback('Получить записи из блокнота', 'getNotionNote')],
         [Markup.button.callback('Получить записи из TODO', 'getNotionTodo')],
       ]),
     );
@@ -44,6 +43,11 @@ export const notionButtons = async (ctx) => {
     bot.action('getNotionTodo', async (context) => {
       await context.answerCbQuery();
       await commandList.getNotionTODO(context);
+    });
+
+    bot.action('getNotionNote', async (context) => {
+      await context.answerCbQuery();
+      await commandList.getNotionNotes(context);
     });
   } catch (err) {
     console.log(err);

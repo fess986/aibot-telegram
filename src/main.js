@@ -14,7 +14,7 @@ import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
-import { getNotionPageSeach } from './API/notion.js';
+import { getNotionPageSeach, queryNote } from './API/notion.js';
 
 import {
   roles,
@@ -108,10 +108,8 @@ bot.command(`${botCommands.createNotionTODO}`, async (ctx) => {
   await commandList.createNotionRecordCommand(ctx, 'default', 'todo');
 });
 
-bot.command('g', async (ctx) => {
-  const page = await getNotionPageSeach();
-  ctx.reply('получена страница');
-  console.log(page);
+bot.command(botCommands.getNotionRecords, async (ctx) => {
+  await commandList.getNotionNotes(ctx);
 });
 
 bot.command(`${botCommands.getNotionTODO}`, async (ctx) => {
