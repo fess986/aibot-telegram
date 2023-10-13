@@ -6,8 +6,8 @@ import axios from 'axios';
 import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
 
-import { createNotionRecord } from './API/notion.js';
-import { createNotionTODO, queryDatabase } from './API/notionTODO.js';
+import { createNotionRecord, queryNote } from './API/notion.js';
+import { createNotionTODO, queryTODO } from './API/notionTODO.js';
 
 import {
   INIT_SESSION,
@@ -376,11 +376,22 @@ export const commandList = {
   // получение из ноушена записей из TODO LIST-а
   async getNotionTODO(ctx) {
     try {
-      const list = await queryDatabase();
+      const list = await queryTODO();
       const formattedList = list.join('\n');
       ctx.reply(formattedList);
     } catch (err) {
       console.log('ошибка получения записей из ноушен - TODO List - а', err.message);
+    }
+  },
+
+  // получение из ноушена записей из TODO LIST-а
+  async getNotionNotes(ctx) {
+    try {
+      const list = await queryNote();
+      const formattedList = list.join('\n');
+      ctx.reply(formattedList);
+    } catch (err) {
+      console.log('ошибка получения записей из ноушен - Note', err.message);
     }
   },
 

@@ -56,11 +56,10 @@ export async function createNotionTODO(text) {
 
 // описание функции https://developers.notion.com/reference/post-database-query
 // возможные сортировки https://developers.notion.com/reference/post-database-query-filter
-export async function queryDatabase() {
+export async function queryTODO() {
   try {
-    console.log('Querying database...');
-    // This query will filter database entries and return pages that have a "Last ordered" property that is more recent than 2022-12-31. Use multiple filters with the AND/OR options: https://developers.notion.com/reference/post-database-query-filter.
-    const lastOrderedIn2023 = await notionTODO.databases.query({
+    console.log('Querying database TODO...');
+    const pagesList = await notionTODO.databases.query({
       database_id: config.get('NOTION_TODO_LIST_DB_ID'),
       // filter: {
       //   property: 'Дата создания',
@@ -77,8 +76,8 @@ export async function queryDatabase() {
 
       sorts: [
         {
-          property: 'Дата создания', // Замени на имя свойства с датой создания
-          direction: 'descending', // Сортировка от новых к старым
+          property: 'Дата создания',
+          direction: 'descending',
         },
       ],
       page_size: 10, // Лимит записей
@@ -86,7 +85,7 @@ export async function queryDatabase() {
 
     // console.log(lastOrderedIn2023.results[0].url);
 
-    const textList = lastOrderedIn2023.results.map((item) => `${item.properties['Задача'].title[0].plain_text} --- ${item.url}`);
+    const textList = pagesList.results.map((item) => `${item.properties['Задача'].title[0].plain_text} --- ${item.url}`);
     return textList;
   } catch (error) {
     console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);

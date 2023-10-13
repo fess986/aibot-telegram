@@ -8,7 +8,7 @@ const notion = new Client({
 const createShortText = (text, maxLength) => ((text.length > maxLength) ? `${text.slice(0, maxLength)}...` : text);
 
 export async function createNotionRecord(text) {
-  const shortText = createShortText(text, 68);
+  const shortText = createShortText(text, 120);
 
   const table = await notion.pages.create({
     parent: { database_id: config.get('NOTION_RECORDS_DB_ID') },
@@ -54,7 +54,7 @@ export async function createNotionRecord(text) {
   return table;
 }
 
-// поиск страниц и баз данных. Параметры поиска и сортировки изрядно отсасывают у notion.databases.query, поэтому использовать не будем
+// поиск страниц и баз данных. Параметры поиска и сортировки изрядно отсасывают у notion.databases.query, поэтому использовать не будем. Из фишек - не подключаемся конкретно к базе
 // https://developers.notion.com/reference/post-search
 export async function getNotionPageSeach() {
   try {
@@ -72,5 +72,28 @@ export async function getNotionPageSeach() {
     console.log(response);
   } catch (err) {
     console.log('Ошибка выгрузки данных из notion-блокнота: ', err.message);
+  }
+}
+
+export async function queryNote() {
+  try {
+    console.log('Querying database List...');
+    const pagesList = await notion.databases.query({
+      database_id: config.get('NOTION_RECORDS_DB_ID'),
+
+      sorts: [
+        {
+          property: 'Date',
+          direction: 'descending',
+        },
+      ],
+      page_size: 10, // Лимит записей
+    });
+
+    const textList = pagesList.results.map((item) => `${item.properties['Сокращенная запись'].title[0].plain_text} --- ${item.url}`);
+    return textList;
+  } catch (error) {
+    console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    return 'error';
   }
 }
