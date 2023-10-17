@@ -6,8 +6,9 @@ import axios from 'axios';
 import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
 
-import { createNotionRecord, queryNote } from './API/notion.js';
+import { createNotionRecord, queryNote } from './API/notionNote.js';
 import { createNotionTODO, queryTODO } from './API/notionTODO.js';
+import { getNotionReminders } from './API/notionReminders.js';
 
 import {
   INIT_SESSION,
@@ -373,7 +374,7 @@ export const commandList = {
     }
   },
 
-  // получение из ноушена записей из TODO LIST-а
+  // получение из ноушена записей TODO LIST-а
   async getNotionTODO(ctx) {
     try {
       const list = await queryTODO();
@@ -384,7 +385,7 @@ export const commandList = {
     }
   },
 
-  // получение из ноушена записей из TODO LIST-а
+  // получение из ноушена записей Блокнота
   async getNotionNotes(ctx) {
     try {
       const list = await queryNote();
@@ -392,6 +393,17 @@ export const commandList = {
       ctx.reply(formattedList);
     } catch (err) {
       console.log('ошибка получения записей из ноушен - Note', err.message);
+    }
+  },
+
+  // получение из ноушена записей-напоминалок
+  async getNotionReminders(ctx) {
+    try {
+      const list = await getNotionReminders();
+      const formattedList = list.join('\n');
+      ctx.reply(formattedList);
+    } catch (err) {
+      console.log('ошибка получения записей из напоминалок', err.message);
     }
   },
 
