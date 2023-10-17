@@ -20,6 +20,7 @@ export const notionButtons = async (ctx) => {
         [Markup.button.callback('Запись в noton TODO list', 'notionTODO')],
         [Markup.button.callback('Получить записи из блокнота', 'getNotionNote')],
         [Markup.button.callback('Получить записи из TODO', 'getNotionTodo')],
+        [Markup.button.callback('Получить записи из Напоминалок', 'getNotionReminders')],
       ]),
     );
 
@@ -48,6 +49,11 @@ export const notionButtons = async (ctx) => {
     bot.action('getNotionNote', async (context) => {
       await context.answerCbQuery();
       await commandList.getNotionNotes(context);
+    });
+
+    bot.action('getNotionReminders', async (context) => {
+      await context.answerCbQuery();
+      await commandList.getNotionReminders(context);
     });
   } catch (err) {
     console.log(err);

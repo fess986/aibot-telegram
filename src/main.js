@@ -14,7 +14,7 @@ import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
-import { getNotionPageSeach, queryNote } from './API/notion.js';
+import { getNotionReminders } from './API/notionReminders.js';
 
 import {
   roles,
@@ -114,6 +114,10 @@ bot.command(botCommands.getNotionRecords, async (ctx) => {
 
 bot.command(`${botCommands.getNotionTODO}`, async (ctx) => {
   await commandList.getNotionTODO(ctx);
+});
+
+bot.command(`${botCommands.getNotionReminders}`, async (ctx) => {
+  await commandList.getNotionReminders(ctx);
 });
 
 // bot.command('g', async (ctx) => {
