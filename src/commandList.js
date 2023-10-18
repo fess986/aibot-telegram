@@ -167,14 +167,13 @@ export const commandList = {
 
   async rebootBot(ctx, text, err = { message: 'объект ошибки отсутствует' }) {
     try {
-      // bot.stop();
-      console.log(`Сообщение ошибки при ребуте - ${err.message}`);
+      console.log(`Сообщение ошибки при ребуте --- ${err.message}`);
 
       if (!ctx) {
         throw new Error('НЕТ КОНТЕКСТА ПРИ ПЕРЕДАЧЕ ОШИБКИ В РЕБУТ');
       }
 
-      await ctx.reply('<b>Бот перезапускается...</b>', { parse_mode: 'HTML' });
+      // await ctx.reply('<b>Бот перезапускается...</b>', { parse_mode: 'HTML' });
 
       if (!ctx.session) {
         ctx.session = {};
@@ -183,14 +182,17 @@ export const commandList = {
       console.log(ctx);
       ctx.session = {};
 
-      console.log(`${text} - `, err.message);
-      await ctx.reply(`${text} - ${err.message}`);
+      if (text) {
+        console.log(`${text} --- `, err.message);
+        await ctx.reply(`${text} - ${err.message}`);
+      }
 
       console.log('перезапуск бота...');
-      await ctx.reply('<b>Бот перезапущен.</b>', { parse_mode: 'HTML' });
-      // bot.launch();
 
       await this.newSession(ctx);
+      console.log('Бот перезапущен!!!');
+      await ctx.reply('<b>Бот перезапущен.</b>', { parse_mode: 'HTML' });
+      // bot.launch();
     } catch (error) {
       console.log('ошибка перезапуска бота', error.message);
 

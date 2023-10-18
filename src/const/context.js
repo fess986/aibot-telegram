@@ -34,7 +34,29 @@ export const CONTEXT_PROGRAMMER = {
 
 export const CONTEXT_CHAT_BOT = {
   role: roles.USER,
-  content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs в package.json используется "type": "module", "telegraf": "^4.12.2", "openai": "^3.2.1". Версия node: v16.19.0
+  content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs в package.json используется "type": "module", "telegraf": "^4.12.2", "openai": "^4.5.0". Версия node: v16.19.0
+
+  Так выглядит инициализация бота:
+  import { Telegraf, session } from 'telegraf';
+  const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
+
+  Опен аи инициализируется так:
+  import { Configuration, OpenAIApi } from "openai";
+  class openAI {
+    // методы которыми может пользоваться класс
+  }
+  export const openAi = new openAI(config.get('OPENAI_KEY'));
+
+  бот умеет работать с сессиями и сохраняет весь контекст входных данных и ответов аи. 
+  bot.use(session());
+
+  нужна помощь для написания кода для бота.
+  `,
+};
+
+export const CONTEXT_CHAT_BOT_NOTION = {
+  role: roles.USER,
+  content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs в package.json используется "type": "module", "telegraf": "^4.12.2", "openai": "^4.5.0". Версия node: v16.19.0
 
   Так выглядит инициализация бота:
   import { Telegraf, session } from 'telegraf';
