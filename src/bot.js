@@ -34,5 +34,21 @@ bot.on('location', async (ctx) => {
   commandList.weatherLocation(ctx);
 });
 
+bot.on('left_chat_member', () => {
+  // const userId = ctx.message.left_chat_member.id;
+  // // Тут можешь выполнить дополнительные действия, если бот был заблокирован пользователем.
+  // console.log(`Пользователь ${userId} удалил бота из чата.`);
+  console.log('Пользователь удалил бота из чата.........................');
+});
+
+bot.on('my_chat_member', () => {
+  // const userId = ctx.message.my_chat_member.id;
+  // if (ctx.message.my_chat_member.status === 'kicked') {
+  //   // Тут можешь выполнить дополнительные действия, если бот был заблокирован пользователем.
+  //   console.log(`Пользователь ${userId} заблокировал бота.`);
+  // }
+  console.log('Пользователь заблокировал бота ');
+});
+
 // запуск бота
 bot.launch();
