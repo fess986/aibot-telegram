@@ -7,6 +7,7 @@ import { commandList } from './commandList.js';
 
 import { startMW } from './mw.js';
 
+console.log(config.get('TELEGRAM_TOKEN'));
 export const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 // стартуем бота
