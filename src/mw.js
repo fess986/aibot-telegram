@@ -13,6 +13,12 @@ export const startMW = (bot) => {
 
   bot.use(async (ctx, next) => {
     try {
+      // при ошибке 403 мы теряем контекст, поэтому если его нет то пропускаем выполнение всех mw
+      if (!ctx.message) {
+        console.log('Контекст безнадежно утерян! Возможно из за ошибки 403 (блокировка бота пользователем)');
+        return;
+      }
+
       console.log(`Пользователь в разрешенном списке? - ${accessIsAllowed(ctx?.message?.from?.id)}`);
       // accessIsAllowed(ctx?.message?.from?.id);
 
