@@ -3,18 +3,15 @@ import { code } from 'telegraf/format'; // специальная фишка, к
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 
 import { ogg } from './utils/oggToMp3.js';
-import { files } from './utils/files.js';
 import { fromWho } from './utils/utils.js';
+import { checkLength, checkVoice } from './utils/checks.js';
 import { openAi } from './API/openai.js';
-// import { Loader } from './loader/loader.js';
 import { commandList } from './commandList.js';
 import { bot } from './bot.js';
 import { contextButtons } from './buttons/contextButtons.js';
 import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
-
-import { getNotionReminders } from './API/notionReminders.js';
 
 import {
   roles,
@@ -172,7 +169,6 @@ bot.on(message('text'), async (ctx) => {
   }
 
   try {
-    await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
     ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
     // const textLoader = new Loader(ctx);
 
@@ -183,6 +179,14 @@ bot.on(message('text'), async (ctx) => {
     console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
     console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
     console.log('текущая длинна сессии - ', ctx.session.sessionLength);
+
+    // проверяем длинну сессии
+    if (await checkLength(ctx, ctx.session.sessionLength)) {
+      console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      return;
+    }
+
+    await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
     // textLoader.show();
 
@@ -232,107 +236,6 @@ bot.on(message('text'), async (ctx) => {
 
 // ------------------------------------ ГОЛОС ---------------------------
 
-// проверка голосового сообщения - является ли оно запросом к АИ или это голосовая команда боту
-const checkVoice = async (ctx, text) => {
-  if (!text) {
-    await ctx.replyWithHTML(ERROR_MESSAGES.noResponse);
-    console.log('ошибка ответа chatGPT');
-    return true;
-  }
-
-  const splitedText = text.split(' ');
-  const [firstWord, secondWord, thirdWord, forthWord, ...rest] = splitedText;
-
-  // проверим, ожидается ли печать текста
-  if (ctx?.session?.createTextFromVoice === true) {
-    await ctx.replyWithHTML('<b>Ваш текст:</b>');
-    await ctx.reply(`${text}`);
-
-    ctx.session.createTextFromVoice ??= false; // если в настройках линтера мы прописываем стандарт ECMAScript 2021, то такая конструкция начинает работать, иначе пишем как внизу указано
-    // ctx.session.createTextFromVoice = ctx.session.createTextFromVoice || false;
-    ctx.session.createTextFromVoice = false;
-    return true;
-  }
-
-  // await ctx.reply(`<b>${firstWord}</b>`, { parse_mode: "HTML" }); // если хотим форматированный текст в ответе бота. При этом не все теги можно использовать, например h1 будет выдавать ошибку
-
-  // добавление контекста
-  if (firstWord.toLowerCase().startsWith('контекст')) {
-    if (secondWord) {
-      if (secondWord.toLowerCase().startsWith('макс')) {
-        commandList.contentMax(ctx);
-        return true;
-      }
-
-      if (secondWord.toLowerCase().startsWith('нов')) {
-        commandList.newSession(ctx);
-        return true;
-      }
-    }
-  }
-
-  // "Голосовой набор ..."
-  if (firstWord.toLowerCase().startsWith('голос')) {
-    if (secondWord) {
-      if (secondWord.toLowerCase().startsWith('набор')) {
-        await ctx.replyWithHTML('<b>Ваш текст:</b>');
-        await ctx.reply(`${thirdWord} ${forthWord} ${rest.join(' ')}`);
-        return true;
-      }
-    }
-  }
-
-  // погода
-  if (firstWord.toLowerCase().startsWith('погода')) {
-    if (secondWord) {
-      return false;
-    }
-
-    commandList.weatherRequest(ctx);
-    return true;
-  }
-
-  // запись сообщения в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ...".
-  if (firstWord.toLowerCase().startsWith('запис')) {
-    if ((thirdWord).toLowerCase().startsWith('тем')) {
-      const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-      const theme = forthWord.match(pattern) !== null ? forthWord.match(pattern)[0].toLowerCase() : 'default';
-      const user = ctx.message.from.last_name;
-      const time = ctx.session.currentDate;
-
-      files.writeRecord(user, time, theme, text);
-
-      ctx.reply(`Ваша запись <b>${text}</b> сохранена в папку <b>${theme}</b>`, {
-        parse_mode: 'HTML',
-      });
-
-      return true;
-    }
-  }
-
-  // запись сообщения в notion, которое начинается с фразы "ЗАПИСЬ В БЛОКНОТ ...".
-  if (firstWord.toLowerCase().startsWith('запис')) {
-    if ((thirdWord).toLowerCase().startsWith('блок')) {
-      const notionText = `${forthWord} ${rest.join(' ')}`;
-      await commandList.createNotionVoiceCommand(ctx, notionText);
-      await ctx.reply(notionText);
-      return true;
-    }
-  }
-
-  // запись сообщения в notion, которое начинается с фразы "ЗАПИСЬ В БЛОКНОТ ...".
-  if (firstWord.toLowerCase().startsWith('запис')) {
-    if ((thirdWord).toLowerCase().startsWith('спис')) {
-      const notionText = `${forthWord} ${rest.join(' ')}`;
-      await commandList.createNotionTODOVoiceCommand(ctx, notionText);
-      return true;
-    }
-  }
-
-  //   // если ни одна проверка не сработала, возвращаем false для дальнейшей передачи сообщения АИ
-  return false;
-};
-
 bot.on(message('voice'), async (ctx) => {
   try {
     await ctx.reply(code('Голосовое сообщение принято, обрабатывается...'));
@@ -362,13 +265,17 @@ bot.on(message('voice'), async (ctx) => {
     }
 
     // проверяем, является ли голосовое сообщение какой-либо стандартной командой для бота или же это обращение к AI.
-    const isCheckPass = await checkVoice(ctx, text);
-
-    if (isCheckPass) {
+    if (await checkVoice(ctx, text)) {
       return;
     }
 
     ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
+
+    // проверяем длинну сессии
+    if (await checkLength(ctx, ctx.session.sessionLength)) {
+      console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      return;
+    }
 
     // const voiceAnswerLoader = new Loader(ctx);
     // voiceAnswerLoader.show();
