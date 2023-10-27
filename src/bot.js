@@ -7,7 +7,6 @@ import { commandList } from './commandList.js';
 
 import { startMW } from './mw.js';
 
-console.log(config.get('TELEGRAM_TOKEN'));
 export const bot = new Telegraf(config.get('TELEGRAM_TOKEN'));
 
 // стартуем бота
@@ -36,18 +35,10 @@ bot.on('location', async (ctx) => {
 });
 
 bot.on('left_chat_member', () => {
-  // const userId = ctx.message.left_chat_member.id;
-  // // Тут можешь выполнить дополнительные действия, если бот был заблокирован пользователем.
-  // console.log(`Пользователь ${userId} удалил бота из чата.`);
   console.log('Пользователь удалил бота из чата.........................');
 });
 
 bot.on('my_chat_member', () => {
-  // const userId = ctx.message.my_chat_member.id;
-  // if (ctx.message.my_chat_member.status === 'kicked') {
-  //   // Тут можешь выполнить дополнительные действия, если бот был заблокирован пользователем.
-  //   console.log(`Пользователь ${userId} заблокировал бота.`);
-  // }
   console.log('Пользователь заблокировал бота ');
 });
 
