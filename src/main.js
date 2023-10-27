@@ -216,6 +216,8 @@ bot.on(message('text'), async (ctx) => {
 
     // textLoader.hide();
 
+    console.log('ошибка появляется тута ...............')
+
     await ctx.reply(response.content);
     console.log(`................Ответ полученный от AI................ : \n ${response.content}`);
   } catch (err) {

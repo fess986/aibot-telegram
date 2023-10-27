@@ -182,6 +182,11 @@ export const commandList = {
       console.log(ctx);
       ctx.session = {};
 
+      if (err.code === 403 || err.code === 429) {
+        console.log('ошибка 403!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        return;
+      }
+
       if (text) {
         console.log(`${text} --- `, err.message);
         await ctx.reply(`${text} - ${err.message}`);
