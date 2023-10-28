@@ -21,8 +21,8 @@ export const commandList = {
   async newSession(ctx) {
     try {
       console.log('..............Обнуление сессии...............');
-      console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
-      console.log('обнуление произвел - ', fromWho(ctx?.message?.from?.id));
+      console.log(`from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`);
+      console.log('обнуление произвел - ', fromWho(ctx?.from?.id));
       ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
       ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
