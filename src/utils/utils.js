@@ -31,6 +31,7 @@ export function deleteFolderRecursive(path) {
 export function accessIsAllowed(id) {
   const allowedUsers = config.get('ALLOWED_USERS');
   const allowedUsersSet = new Set(allowedUsers);
+  console.log('Проверяемый id - ', id);
   return allowedUsersSet.has(id);
 }
 
