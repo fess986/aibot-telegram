@@ -191,6 +191,7 @@ bot.on(message('text'), async (ctx) => {
     // textLoader.show();
 
     const response = await openAi.chat(ctx.session.messages);
+    // const response = await openAi.chat([{ role: 'user', content: 'Say this is a test' }]);
 
     // проверяем, прошел ли запрос по таймайту, если нет - пишем сообщение пользователю и ничего не делаем
     if (typeof response === 'string') {

@@ -6,9 +6,18 @@ import { MODELS } from '../const/const.js';
 
 class OpenAIClass {
   constructor(apiKey) {
+    // обычное создание бота с использованием OpenAI
     this.openai = new OpenAI({
       apiKey, // This is also the default, can be omitted
     });
+
+    // локальный бот с использованием OpenAI
+    console.log(apiKey);
+
+    // this.openai = new OpenAI({
+    //   apiKey: 'anything',
+    //   baseURL: 'http://localhost:3040/v1',
+    // });
   }
 
   async transcription(filePath) {
@@ -26,7 +35,7 @@ class OpenAIClass {
 
       const response = await Promise.race([responsePromise, timePromise]);
 
-      const responseText = (response === 'ошибка') ? 'ошибка' : response.text;
+      const responseText = response === 'ошибка' ? 'ошибка' : response.text;
 
       return responseText;
     } catch (err) {
@@ -49,14 +58,19 @@ class OpenAIClass {
 
       const responsePromise = this.openai.chat.completions.create({
         model: MODELS.gpt3_5, // модель. в будущем будет доступна еще версия с 4 чатом
+        // model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
-        temperature: 0.5,
+        // temperature: 0.5,
       });
+
+      console.log('sagdsrffffffffffffffffffffffffffffffffffffffff')
+      console.log(messages);
 
       // ждем ответа от чата.
       const response = await Promise.race([responsePromise, timePromise]);
+      console.log(response)
 
-      const responseText = typeof response === 'string' ? 'ошибка' : response.choices[0].message;
+      const responseText =				typeof response === 'string' ? 'ошибка' : response.choices[0].message;
 
       return responseText;
     } catch (err) {
@@ -110,7 +124,7 @@ class OpenAIClass {
 
       const response = await Promise.race([timePromise, responsePromise]);
 
-      const responseData = response === 'ошибка' ? 'ошибка' : response.data[0].url;
+      const responseData =				response === 'ошибка' ? 'ошибка' : response.data[0].url;
 
       return responseData;
     } catch (err) {
