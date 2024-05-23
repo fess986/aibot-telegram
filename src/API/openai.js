@@ -57,20 +57,19 @@ class OpenAIClass {
       });
 
       const responsePromise = this.openai.chat.completions.create({
-        model: MODELS.gpt3_5, // модель. в будущем будет доступна еще версия с 4 чатом
+        model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
         // temperature: 0.5,
       });
 
-      console.log('sagdsrffffffffffffffffffffffffffffffffffffffff')
       console.log(messages);
 
       // ждем ответа от чата.
       const response = await Promise.race([responsePromise, timePromise]);
-      console.log(response)
+      console.log(response);
 
-      const responseText =				typeof response === 'string' ? 'ошибка' : response.choices[0].message;
+      const responseText = typeof response === 'string' ? 'ошибка' : response.choices[0].message;
 
       return responseText;
     } catch (err) {

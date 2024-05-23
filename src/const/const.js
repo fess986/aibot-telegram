@@ -53,6 +53,7 @@ export const botCommands = {
 export const MODELS = {
   gpt3_5: 'gpt-3.5-turbo',
   gpt3_5_0613: 'gpt-3.5-turbo-0613',
+  gpt4o: 'gpt-4o',
   davinci: 'text-davinci-003',
   gpt_instruct: 'gpt-3.5-turbo-instruct',
   whisper: 'whisper-1',
