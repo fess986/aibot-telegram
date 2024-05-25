@@ -15,6 +15,7 @@ import {
   CONTEXT_MAX,
   CONTEXT_PROGRAMMER,
   CONTEXT_CHAT_BOT,
+  CONTEXT_TZARKOV,
 } from './const/context.js';
 
 export const commandList = {
@@ -154,6 +155,21 @@ export const commandList = {
     try {
       ctx.session.messages.push(CONTEXT_CHAT_BOT);
       ctx.reply('Контекст <b>CONTEXT_CHAT_BOT</b> добавлен', {
+        parse_mode: 'HTML',
+      });
+    } catch (err) {
+      commandList.rebootBot(
+        ctx,
+        'Ошибка добавления контекста CONTEXT_CHAT_BOT',
+        err,
+      );
+    }
+  },
+
+  contextTzarkov(ctx) {
+    try {
+      ctx.session.messages.push(CONTEXT_TZARKOV);
+      ctx.reply('Контекст <b>CONTEXT_TZARKOV</b> добавлен', {
         parse_mode: 'HTML',
       });
     } catch (err) {
