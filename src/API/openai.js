@@ -13,11 +13,6 @@ class OpenAIClass {
 
     // локальный бот с использованием OpenAI
     console.log(apiKey);
-
-    // this.openai = new OpenAI({
-    //   apiKey: 'anything',
-    //   baseURL: 'http://localhost:3040/v1',
-    // });
   }
 
   async transcription(filePath) {

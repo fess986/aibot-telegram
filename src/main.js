@@ -28,16 +28,16 @@ bot.command(botCommands.contextButtons, async (ctx) => {
   await contextButtons(ctx);
 });
 
+bot.command(botCommands.notionButtons, async (ctx) => {
+  await notionButtons(ctx);
+});
+
 bot.command(botCommands.bonusButtons, async (ctx) => {
   await bonusButtons(ctx);
 });
 
 bot.command(botCommands.recordButtons, async (ctx) => {
   await recordButtons(ctx);
-});
-
-bot.command(botCommands.notionButtons, async (ctx) => {
-  await notionButtons(ctx);
 });
 
 // ----------------------ЗАПУСК КОМАНД----------------------------
@@ -80,6 +80,10 @@ bot.command(`${botCommands.contextProg}`, async (ctx) => {
 
 bot.command(`${botCommands.contextBot}`, async (ctx) => {
   commandList.contentBot(ctx);
+});
+
+bot.command(`${botCommands.contextTzarkov}`, async (ctx) => {
+  commandList.contextTzarkov(ctx);
 });
 
 bot.command(`${botCommands.reboot}`, async (ctx) => {
