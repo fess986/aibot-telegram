@@ -55,7 +55,7 @@ class OpenAIClass {
         model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
-        // temperature: 0.5,
+        temperature: 0.4,
       });
 
       console.log(messages);

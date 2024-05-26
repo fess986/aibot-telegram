@@ -4,74 +4,47 @@ import { INIT_SESSION, roles } from './const/context.js';
 import { commandList } from './commandList.js';
 import { openAi } from './API/openai.js';
 import { ERROR_MESSAGES } from './const/const.js';
-import { accessIsAllowed } from './utils/utils.js';
 
-// прописываем мидлвеир, который будет добавлять в контекст общения текущее время, для того чтобы бот постоянно знал какая сегодня дата. А так же проверяем наличие контекста - если его нет, инициируем
+import { allowedListMW } from './middlewares/allowedListMW.js';
+
+const currentDateMW = async (ctx, next) => {
+  try {
+    const currentDate = new Date(); // получаем текущую дату и время
+
+    if (!ctx.session) {
+      // Проверяем существует ли объект ctx.session
+      ctx.session = {};
+    }
+    ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
+    ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
+
+    ctx.session.messages.push({
+      role: roles.SYSTEM,
+      content: `Системное время: ${currentDate}`,
+    });
+    console.log(ctx.session);
+
+    // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
+
+    await next(); // передаем управление следующему обработчику
+
+    // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
+  } catch (err) {
+    await commandList.rebootBot(
+      ctx,
+      'ошибка MW добавления системного времени в контекст разговора: ',
+      err,
+    );
+    await next();
+  }
+};
 
 export const startMW = (bot) => {
   bot.use(session()); // подключаем мидлвеир, который умеет работать с сессиями
 
-  bot.use(async (ctx, next) => {
-    try {
-      if (ctx.message) {
-        console.log(`Пользователь в разрешенном списке? - ${accessIsAllowed(ctx?.message?.from?.id)}`);
+  bot.use(allowedListMW); // проверка разрешенного чек-листа
 
-        if (accessIsAllowed(ctx?.message?.from?.id)) {
-          await next();
-        } else {
-          ctx.reply('до конца года использование данного бота ограничено администрацией для большинства пользователей. Скорее всего он будет разблокирован в начале 2024 года. Если вам выдали личное разрешение на использование, свяжитесь с Карповым Максимом');
-        }
-      }
-
-      if (ctx.update.callback_query) {
-        if (accessIsAllowed(ctx?.from.id)) {
-          await next();
-        } else {
-          ctx.reply('до конца года использование данного бота ограничено администрацией для большинства пользователей. Скорее всего он будет разблокирован в начале 2024 года. Если вам выдали личное разрешение на использование, свяжитесь с Карповым Максимом');
-        }
-      }
-    } catch (err) {
-      await commandList.rebootBot(
-        ctx,
-        'ошибка MW ограничения бот-листа: ',
-        err,
-      );
-      await next();
-    }
-  });
-
-  bot.use(async (ctx, next) => {
-    try {
-      const currentDate = new Date(); // получаем текущую дату и время
-
-      if (!ctx.session) {
-      // Проверяем существует ли объект ctx.session
-        ctx.session = {};
-      }
-      ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
-      ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION)); // инициируем новый контекст, если его не было
-      // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
-
-      ctx.session.messages.push({
-        role: roles.SYSTEM,
-        content: `Системное время: ${currentDate}`,
-      });
-      // console.log(ctx.session);
-
-      // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
-
-      await next(); // передаем управление следующему обработчику
-
-    // console.timeEnd(`Processing update ${ctx.update.update_id}`); // завершение счётчика и показ времени выполнения всех мидлвеиров
-    } catch (err) {
-      await commandList.rebootBot(
-        ctx,
-        'ошибка MW добавления системного времени в контекст разговора: ',
-        err,
-      );
-      await next();
-    }
-  });
+  bot.use(currentDateMW);
 
   // обработка того, задан ли вопрос пользователю по поводу описания картинки
   bot.use(async (ctx, next) => {
