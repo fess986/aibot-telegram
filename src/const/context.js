@@ -2,6 +2,7 @@
 const botMenu = `
 help - Справка
 context -    Контекст общения
+settings -    Настройки модели chatGPT
 notion -    Работа с ноушеном. Ограниченный функционал
 bonus -    Дополнительные возможности
 records -  Записи
@@ -69,7 +70,7 @@ export const CONTEXT_CHAT_BOT = {
   `,
 };
 
-export const CONTEXT_TZARKOV = {
+export const CONTEXT_DEVOPS = {
   role: roles.USER,
   content: `
   **Описание:**

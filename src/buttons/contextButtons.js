@@ -13,7 +13,7 @@ export const contextButtons = async (ctx) => {
           Markup.button.callback('Программист JS', 'programmist'),
           Markup.button.callback('Пишем бота', 'bot'),
         ],
-        [Markup.button.callback('Царьков', 'tzarkovContext')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
+        [Markup.button.callback('DevOps', 'deVopsContext')], // каждый массив представляет одну строку с кнопками. btn1 - это идентификатор, по которому ее потом можно найти
       ]),
     );
 
@@ -32,9 +32,9 @@ export const contextButtons = async (ctx) => {
       commandList.contentBot(ctx1);
     });
 
-    bot.action('tzarkovContext', async (ctx1) => {
+    bot.action('deVopsContext', async (ctx1) => {
       await ctx1.answerCbQuery();
-      commandList.contextTzarkov(ctx1);
+      commandList.contextDevOps(ctx1);
     });
 
     bot.action('new', async (ctx1) => {
