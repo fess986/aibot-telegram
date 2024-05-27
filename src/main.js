@@ -44,7 +44,7 @@ bot.command(botCommands.recordButtons, async (ctx) => {
 
 // ----------------------ЗАПУСК КОМАНД----------------------------
 
-/// ///////////////////////// команды работы со стейтами модели ////////////////////////////
+/// ///////// команды работы со стейтами модели ////////////
 // устанавливаем модель gpt3.5
 bot.command(botCommands.setGPT3, async (ctx) => {
   await commandList.setGPT3(ctx);
@@ -65,8 +65,7 @@ bot.command(botCommands.setGptTemp, async (ctx) => {
   await stateManager.setGptTemp(ctx.message.from.id);
 });
 
-
-/// ///////////////////////// работа с контекстом ////////////////////////////
+/// //////////// работа с контекстом ///////////////////////
 bot.command(botCommands.new, async (ctx) => {
   // console.log(ctx);
   commandList.newSession(ctx);
@@ -82,16 +81,11 @@ bot.command(botCommands.new, async (ctx) => {
   // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
 });
 
-bot.command(botCommands.record, async (ctx) => {
-  commandList.createRecord(ctx);
-});
-
-bot.command(botCommands.sendRecords, async (ctx) => {
-  commandList.sendRecords(ctx, bot);
-});
-
-bot.command(botCommands.removeRecords, async (ctx) => {
-  commandList.removeRecords(ctx);
+bot.command(`${botCommands.reboot}`, async (ctx) => {
+  await commandList.rebootBot(
+    ctx,
+    'Перезагрузка бота по запросу пользователя: ',
+  );
 });
 
 bot.command(`${botCommands.contextMax}`, async (ctx) => {
@@ -110,21 +104,20 @@ bot.command(`${botCommands.contextTzarkov}`, async (ctx) => {
   commandList.contextTzarkov(ctx);
 });
 
-bot.command(`${botCommands.reboot}`, async (ctx) => {
-  await commandList.rebootBot(
-    ctx,
-    'Перезагрузка бота по запросу пользователя: ',
-  );
+/// ///// команды работы с записями в файлы ////////////////////////
+bot.command(botCommands.record, async (ctx) => {
+  commandList.createRecord(ctx);
 });
 
-bot.command(`${botCommands.image}`, (ctx) => {
-  commandList.createImage(ctx);
+bot.command(botCommands.sendRecords, async (ctx) => {
+  commandList.sendRecords(ctx, bot);
 });
 
-bot.command(`${botCommands.weather}`, (ctx) => {
-  commandList.weatherRequest(ctx);
+bot.command(botCommands.removeRecords, async (ctx) => {
+  commandList.removeRecords(ctx);
 });
 
+/// // работа с notion ///////////////
 bot.command(`${botCommands.createNotionRecord}`, async (ctx) => {
   await commandList.createNotionRecordCommand(ctx);
 });
@@ -145,6 +138,16 @@ bot.command(`${botCommands.getNotionReminders}`, async (ctx) => {
   await commandList.getNotionReminders(ctx);
 });
 
+/// //////  другие задачи ///////////////////
+bot.command(`${botCommands.image}`, (ctx) => {
+  commandList.createImage(ctx);
+});
+
+bot.command(`${botCommands.weather}`, (ctx) => {
+  commandList.weatherRequest(ctx);
+});
+
+/// //// работа с гитхабом //////////
 // bot.command('g', async (ctx) => {
 //   try {
 //     ctx.reply('скачиваем контекст из гитхаба');

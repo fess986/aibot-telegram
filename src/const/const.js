@@ -44,16 +44,16 @@ export const botCommands = {
   recordButtons: 'records',
   notionButtons: 'notion',
 
-  createNotionRecord: 'nr',
-  createNotionTODO: 'nt',
-  getNotionTODO: 'gnt',
-  getNotionRecords: 'gnr',
-  getNotionReminders: 'gnrm',
+  createNotionRecord: 'nr', // создание записи в notion
+  createNotionTODO: 'nt', //     создание записи в notion TODO list
+  getNotionTODO: 'gnt', //     получение записей из notion TODO list
+  getNotionRecords: 'gnr', // получение записей из notion-блокнота
+  getNotionReminders: 'gnrm', // получение из ноушена записей-напоминалок
 
-  setGPT3: 'gpt3',
-  setGPT4: 'gpt4',
-  setGptTemp: 'settemp',
-  getStateGPT: 'get',
+  setGPT3: 'gpt3', // установка модели gpt3.5
+  setGPT4: 'gpt4', // установка модели gpt4о
+  setGptTemp: 'settemp', // установка температуры
+  getStateGPT: 'get', // получение текущих данных модели
 };
 
 export const MODELS = {
