@@ -51,12 +51,13 @@ class OpenAIClass {
         setTimeout(() => resolve('ошибка'), 85000);
       });
 
+
       const responsePromise = this.openai.chat.completions.create({
-        model: state.model, // модель. в будущем будет доступна еще версия с 4 чатом
+        model: state.model || MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
-        temperature: state.temperature,
+        temperature: state.temperature || 0.4,
       });
 
       console.log(messages);

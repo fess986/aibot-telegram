@@ -49,6 +49,11 @@ export const botCommands = {
   getNotionTODO: 'gnt',
   getNotionRecords: 'gnr',
   getNotionReminders: 'gnrm',
+
+  setGPT3: 'gpt3',
+  setGPT4: 'gpt4',
+  setGptTemp: 'settemp',
+  getStateGPT: 'get',
 };
 
 export const MODELS = {
@@ -62,5 +67,5 @@ export const MODELS = {
 
 export const DEFAULT_MODEL_STATE = {
   model: MODELS.gpt4o,
-  temperature: 0.5,
+  temperature: 0.4,
 };
