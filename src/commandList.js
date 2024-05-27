@@ -435,26 +435,42 @@ export const commandList = {
 
   // устанавливаем модель gpt3.5
   async setGPT3(ctx) {
-    await setModel(ctx, MODELS.gpt3_5);
+    try {
+      await setModel(ctx, MODELS.gpt3_5);
+    } catch (err) {
+      console.log('ошибка установки модели 3.5', err.message);
+    }
   },
 
   // устанавливаем модель gpt4о
   async setGPT4(ctx) {
-    await setModel(ctx, MODELS.gpt4o);
+    try {
+      await setModel(ctx, MODELS.gpt4o);
+    } catch (err) {
+      console.log('ошибка установки модели 4', err.message);
+    }
   },
 
   // получаем текущие данные модели
   async getStateGPT(ctx) {
-    await stateManager.getState(ctx.message.from.id);
+    try {
+      await stateManager.getState(ctx.message.from.id);
+    } catch (err) {
+      console.log('ошибка получения текущих данных модели', err.message);
+    }
   },
 
   // устанавливаем температуру по шаблону /settemp 0.5
   async setGptTemp(ctx) {
-    const temp = parseFloat(ctx.message.text.split(' ')[1]);
-    if (Number.isNaN(temp) || temp < 0 || temp > 1) {
-      ctx.reply('Пожалуйста, укажите значение температуры от 0 до 1');
-    } else {
-      setTemperature(ctx, temp);
+    try {
+      const temp = parseFloat(ctx.message.text.split(' ')[1]);
+      if (Number.isNaN(temp) || temp < 0 || temp > 1) {
+        ctx.reply('Пожалуйста, укажите значение температуры от 0 до 1');
+      } else {
+        setTemperature(ctx, temp);
+      }
+    } catch (err) {
+      console.log('ошибка установки температуры модели', err.message);
     }
   },
 };
