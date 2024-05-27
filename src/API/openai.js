@@ -43,7 +43,7 @@ class OpenAIClass {
     }
   }
 
-  async chat(messages) {
+  async chat(messages, state) {
     try {
       // для исключения ошибки по таймауту, мы будем проводить "гонку" между нашим сетевым запросом и промисом-заглушкой с обычным таймером на нужную нам величину. Обычно он падает после запроса на 90000ms (90 сек), но мы поставим поменьше, например на 60 сек
 
@@ -52,10 +52,11 @@ class OpenAIClass {
       });
 
       const responsePromise = this.openai.chat.completions.create({
-        model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
+        model: state.model, // модель. в будущем будет доступна еще версия с 4 чатом
+        // model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: 'gpt-3.5-turbo', // модель. в будущем будет доступна еще версия с 4 чатом
         messages, // заданный массив запроса, где кроме самого запроса еще есть роль, контекст и тд
-        temperature: 0.4,
+        temperature: state.temperature,
       });
 
       console.log(messages);

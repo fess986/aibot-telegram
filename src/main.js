@@ -13,12 +13,15 @@ import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
+import stateManager from './statemanager/stateManager.js';
+import { setModel, setTemperature } from './statemanager/actions.js';
+
 import {
   roles,
   INIT_SESSION,
 } from './const/context.js';
 
-import { ERROR_MESSAGES, botCommands } from './const/const.js';
+import { ERROR_MESSAGES, MODELS, botCommands } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -41,6 +44,31 @@ bot.command(botCommands.recordButtons, async (ctx) => {
 });
 
 // ----------------------ЗАПУСК КОМАНД----------------------------
+
+// устанавливаем модель gpt3.5
+bot.command('gpt3', async (ctx) => {
+  await setModel(ctx, MODELS.gpt3_5);
+});
+
+// устанавливаем модель gpt4о
+bot.command('gpt4', async (ctx) => {
+  await setModel(ctx, MODELS.gpt4o);
+});
+
+// устанавливаем температуру
+bot.command('get', async (ctx) => {
+  await stateManager.getState(ctx.message.from.id);
+});
+
+// устанавливаем температуру по шаблону /settemp 0.5
+bot.command('settemp', async (ctx) => {
+  const temp = parseFloat(ctx.message.text.split(' ')[1]);
+  if (Number.isNaN(temp) || temp < 0 || temp > 1) {
+    ctx.reply('Пожалуйста, укажите значение температуры от 0 до 1');
+  } else {
+    setTemperature(ctx, temp);
+  }
+});
 
 // bot.command - позволяет обрабатывать комманды в чате, например тут будет обрабатываться комманда '/new'. В данном случае мы обнуляем контекст сессии для того чтобы общаться с ботом заново
 bot.command(`${botCommands.new}`, async (ctx) => {
@@ -194,7 +222,13 @@ bot.on(message('text'), async (ctx) => {
 
     // textLoader.show();
 
-    const response = await openAi.chat(ctx.session.messages);
+    const userId = ctx.message.from.id ?? ctx?.update?.callback_query?.from?.id;
+    const state = stateManager.getState(userId);
+
+    console.log('Получаем стейт пользователя - ', state);
+    console.log('id пользователя - ', userId);
+
+    const response = await openAi.chat(ctx.session.messages, state);
     // const response = await openAi.chat([{ role: 'user', content: 'Say this is a test' }]);
 
     // проверяем, прошел ли запрос по таймайту, если нет - пишем сообщение пользователю и ничего не делаем

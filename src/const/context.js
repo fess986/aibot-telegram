@@ -35,6 +35,7 @@ export const CONTEXT_PROGRAMMER = {
 export const CONTEXT_CHAT_BOT = {
   role: roles.USER,
   content: `Сейчас я пишу телеграмм-бота который работает с platform.openai.com на языке nodeJs в package.json используется "type": "module", "telegraf": "^4.12.2", "openai": "^4.5.0". Версия node: v16.19.0
+  Входной файл - src/main.js
 
   Так выглядит инициализация бота:
   import { Telegraf, session } from 'telegraf';
@@ -43,6 +44,7 @@ export const CONTEXT_CHAT_BOT = {
   Опен аи инициализируется так:
   import { Configuration, OpenAIApi } from "openai";
   class openAI {
+    async chat(messages) {}  // метод для общения с аи 
     // методы которыми может пользоваться класс
   }
   export const openAi = new openAI(config.get('OPENAI_KEY'));
@@ -50,13 +52,18 @@ export const CONTEXT_CHAT_BOT = {
   бот умеет работать с сессиями и сохраняет весь контекст входных данных и ответов аи. 
   bot.use(session());
 
-  работа с middleware организована в файле src/mw.js : 
+  работа с middleware организована в файле src/mw.js , куда импортируются миддлвейры из папки src/middlewares 
   // обработка того, задан ли вопрос пользователю по поводу записи текста в notion
-  bot.use(async (ctx, next) => {
+  Например mw, который проверяет whitelist : 
+  export const allowedListMW = async (ctx, next) => {
     try {
-      if (ctx?.session?.askNotionRecord === true) {
-        await commandList.createNotionRecordCommand(ctx, 'button');
-      }
+      if (ctx.message) {
+  
+        if (accessIsAllowed(ctx?.message?.from?.id)) {
+          await next();
+        } else {
+          ctx.reply('ограниченное использование бота');
+        }
 
   нужна помощь для написания кода для бота.
   `,
@@ -129,6 +136,8 @@ export const CONTEXT_CHAT_BOT_NOTION = {
   `,
 };
 
+////////////////////////// контексты, не используемые в боте //////////////////////////
+
 // контексты для AI
 export const AI_GENERAL = {
   role: roles.USER,
@@ -167,3 +176,4 @@ middlewares/: Папка для промежуточных обработчик�
 Добавление новых функциональных возможностей по мере необходимости.
 `,
 };
+
