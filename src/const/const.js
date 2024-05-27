@@ -59,3 +59,8 @@ export const MODELS = {
   gpt_instruct: 'gpt-3.5-turbo-instruct',
   whisper: 'whisper-1',
 };
+
+export const DEFAULT_MODEL_STATE = {
+  model: MODELS.gpt4o,
+  temperature: 0.5,
+};
