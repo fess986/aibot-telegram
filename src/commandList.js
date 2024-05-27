@@ -18,7 +18,7 @@ import {
   CONTEXT_MAX,
   CONTEXT_PROGRAMMER,
   CONTEXT_CHAT_BOT,
-  CONTEXT_TZARKOV,
+  CONTEXT_DEVOPS,
 } from './const/context.js';
 
 export const commandList = {
@@ -169,16 +169,16 @@ export const commandList = {
     }
   },
 
-  contextTzarkov(ctx) {
+  contextDevOps(ctx) {
     try {
-      ctx.session.messages.push(CONTEXT_TZARKOV);
-      ctx.reply('Контекст <b>CONTEXT_TZARKOV</b> добавлен', {
+      ctx.session.messages.push(CONTEXT_DEVOPS);
+      ctx.reply('Контекст <b>CONTEXT_DEVOPS</b> добавлен', {
         parse_mode: 'HTML',
       });
     } catch (err) {
       commandList.rebootBot(
         ctx,
-        'Ошибка добавления контекста CONTEXT_CHAT_BOT',
+        'Ошибка добавления контекста CONTEXT_DEVOPS',
         err,
       );
     }
@@ -454,7 +454,12 @@ export const commandList = {
   // получаем текущие данные модели
   async getStateGPT(ctx) {
     try {
-      await stateManager.getState(ctx.message.from.id);
+      const state = await stateManager.getState(ctx.message.from.id);
+      if (state) {
+        await ctx.reply(JSON.stringify(state, null, 2));
+      } else {
+        await ctx.reply('Ошибка получения данных модели');
+      }
     } catch (err) {
       console.log('ошибка получения текущих данных модели', err.message);
     }

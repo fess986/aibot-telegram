@@ -20,7 +20,7 @@ import {
   INIT_SESSION,
 } from './const/context.js';
 
-import { ERROR_MESSAGES, botCommands } from './const/const.js';
+import { ERROR_MESSAGES, botCommands, settingsMessage } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -57,17 +57,20 @@ bot.command(botCommands.setGPT4, async (ctx) => {
 
 // получаем текущие данные модели
 bot.command(botCommands.getStateGPT, async (ctx) => {
-  await stateManager.getState(ctx.message.from.id);
+  await commandList.getStateGPT(ctx);
 });
 
 // устанавливаем температуру по шаблону /settemp 0.5
 bot.command(botCommands.setGptTemp, async (ctx) => {
-  await stateManager.setGptTemp(ctx.message.from.id);
+  await commandList.setGptTemp(ctx);
+});
+
+bot.command(botCommands.getSettings, async (ctx) => {
+  await ctx.reply(settingsMessage);
 });
 
 /// //////////// работа с контекстом ///////////////////////
 bot.command(botCommands.new, async (ctx) => {
-  // console.log(ctx);
   commandList.newSession(ctx);
 
   // ctx.session = {...INIT_SESSION}; // так не работает, поверхностное клонирование
@@ -100,8 +103,8 @@ bot.command(`${botCommands.contextBot}`, async (ctx) => {
   commandList.contentBot(ctx);
 });
 
-bot.command(`${botCommands.contextTzarkov}`, async (ctx) => {
-  commandList.contextTzarkov(ctx);
+bot.command(`${botCommands.contextDevOps}`, async (ctx) => {
+  commandList.contextDevOps(ctx);
 });
 
 /// ///// команды работы с записями в файлы ////////////////////////
