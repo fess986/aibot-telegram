@@ -5,11 +5,14 @@ import axios from 'axios';
 
 import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
+import stateManager from './statemanager/stateManager.js';
 
 import { createNotionRecord, queryNote } from './API/notionNote.js';
 import { createNotionTODO, queryTODO } from './API/notionTODO.js';
 import { getNotionReminders } from './API/notionReminders.js';
+import { setModel, setTemperature } from './statemanager/actions.js';
 
+import { MODELS } from './const/const.js';
 import {
   INIT_SESSION,
   CONTEXT_MAX,
@@ -430,4 +433,28 @@ export const commandList = {
     }
   },
 
+  // устанавливаем модель gpt3.5
+  async setGPT3(ctx) {
+    await setModel(ctx, MODELS.gpt3_5);
+  },
+
+  // устанавливаем модель gpt4о
+  async setGPT4(ctx) {
+    await setModel(ctx, MODELS.gpt4o);
+  },
+
+  // получаем текущие данные модели
+  async getStateGPT(ctx) {
+    await stateManager.getState(ctx.message.from.id);
+  },
+
+  // устанавливаем температуру по шаблону /settemp 0.5
+  async setGptTemp(ctx) {
+    const temp = parseFloat(ctx.message.text.split(' ')[1]);
+    if (Number.isNaN(temp) || temp < 0 || temp > 1) {
+      ctx.reply('Пожалуйста, укажите значение температуры от 0 до 1');
+    } else {
+      setTemperature(ctx, temp);
+    }
+  },
 };
