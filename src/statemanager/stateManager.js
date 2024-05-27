@@ -9,8 +9,8 @@ class StateManager {
   initializeState(userId) {
     if (!this.state[userId]) {
       this.state[userId] = {
-        model: MODELS.gpt3_5,
-        temperature: 0.5,
+        model: MODELS.gpt4o,
+        temperature: 0.4,
       };
     }
   }
