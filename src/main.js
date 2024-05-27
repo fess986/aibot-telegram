@@ -203,6 +203,12 @@ bot.on(message('text'), async (ctx) => {
   }
 
   try {
+    const firstLetter = ctx?.message?.text?.charAt(0);
+    if (firstLetter === '/') {
+      await ctx.reply('такой команды не существует, просмотр всех доступных команд - /help');
+      return;
+    }
+
     ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
     // const textLoader = new Loader(ctx);
 
