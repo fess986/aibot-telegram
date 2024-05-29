@@ -20,7 +20,9 @@ import {
   INIT_SESSION,
 } from './const/context.js';
 
-import { ERROR_MESSAGES, botCommands, settingsMessage } from './const/const.js';
+import {
+  ERROR_MESSAGES, botCommands, settingsMessage, changeIdConst,
+} from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
 
@@ -150,6 +152,10 @@ bot.command(`${botCommands.weather}`, (ctx) => {
   commandList.weatherRequest(ctx);
 });
 
+bot.command(botCommands.changeId, async (ctx) => {
+  await commandList.changeId(ctx);
+});
+
 /// //// работа с гитхабом //////////
 // bot.command('g', async (ctx) => {
 //   try {
@@ -178,6 +184,19 @@ bot.command(`${botCommands.weather}`, (ctx) => {
 //     );
 //   }
 // });
+
+// Пример команды для включения режима смены ID
+bot.command('idon', (ctx) => {
+  changeIdConst.isChanged = true;
+  ctx.reply('Режим смены ID включен.');
+});
+
+// Пример команды для отключения режима смены ID
+bot.command('idoff', (ctx) => {
+  // const userId = ctx?.message?.from?.id;
+  changeIdConst.isChanged = false;
+  ctx.reply('Режим смены ID отключен.');
+});
 
 // --------------------------- AI-ТЕКСТ --------------------------
 // учим бота общаться через текст
@@ -399,3 +418,27 @@ bot.on(message('voice'), async (ctx) => {
 // прерывания нужны для адекватного "мягкого" завершения работы бота при получении от системы или пользователя соответствующих запросов. process.once - обрабатывает эти запросы, а коллбэк завершает работу бота () => bot.stop('SIGINT')
 process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условию Signal Interrupt - прерыванию процесса, например пользователем ctrl+c.
 process.once('SIGTERM', () => bot.stop('SIGTERM')); // (Signal Terminate) остановка бота по завершению работы, например от системы
+
+// bot.on(message('text'), async (ctx) => {
+//   ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
+
+//   ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+//   ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
+//   // console.log(ctx.message.text);
+
+//   const userId = ctx?.message?.from?.id ?? ctx?.update?.callback_query?.from?.id;
+//   if (!userId) {
+//     console.log('ошибка userId');
+//     return;
+//   }
+
+//   const response = await openAi.chat(ctx.session.messages, state);
+
+//   ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
+//   ctx.session.messages.push({
+//     role: roles.ASSISTANT,
+//     content: response.content,
+//   });
+
+//   await ctx.reply(response.content);
+// });

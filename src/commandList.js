@@ -20,6 +20,7 @@ import {
   CONTEXT_CHAT_BOT,
   CONTEXT_DEVOPS,
 } from './const/context.js';
+import { changeId } from './middlewares/changeId.js';
 
 export const commandList = {
   async newSession(ctx) {
@@ -123,6 +124,14 @@ export const commandList = {
     } catch (e) {
       // eslint-disable-next-line no-use-before-define
       await commandList.rebootBot(ctx, 'Ошибка запроса погоды: ', e); // отключаем проверку линтера, так как получается перекрестный вызов
+    }
+  },
+
+  async changeId(ctx) {
+    if ((!ctx.session.changeId) || (ctx?.session?.changeId === false)) {
+      ctx.session.changeId = true;
+    } else {
+      ctx.session.changeId = false;
     }
   },
 
