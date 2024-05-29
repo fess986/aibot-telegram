@@ -42,10 +42,11 @@ export const botCommands = {
   contextMax: 'max', // контекст максима
   contextBot: 'bot', // контекст программирования бота
   contextProg: 'prog', // контекст программиста JS и TS
-  contextDevOps: 'dev',
+  contextDevOps: 'dev', // контекст DevOps
 
   weather: 'w', // текущая погода
   image: 'i', // рисование картинок по запросу пользователя. Для экономии ресурсов будем рисовать только по одной картинке с разрешением 256х256
+  changeId: 'id', // смена id
 
   record: 'r1', // запись сообщения в файл
   sendRecords: 's', // отправить архив с текущими записями пользователя
@@ -80,4 +81,8 @@ export const MODELS = {
 export const DEFAULT_MODEL_STATE = {
   model: MODELS.gpt4o,
   temperature: 0.4,
+};
+
+export const changeIdConst = {
+  isChanged: false,
 };
