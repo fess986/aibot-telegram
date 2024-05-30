@@ -152,10 +152,6 @@ bot.command(`${botCommands.weather}`, (ctx) => {
   commandList.weatherRequest(ctx);
 });
 
-bot.command(botCommands.changeId, async (ctx) => {
-  await commandList.changeId(ctx);
-});
-
 /// //// работа с гитхабом //////////
 // bot.command('g', async (ctx) => {
 //   try {
@@ -185,15 +181,14 @@ bot.command(botCommands.changeId, async (ctx) => {
 //   }
 // });
 
-// Пример команды для включения режима смены ID
-bot.command('idon', (ctx) => {
+// Команда для включения режима смены ID
+bot.command(botCommands.changeToAltId, (ctx) => {
   changeIdConst.isChanged = true;
   ctx.reply('Режим смены ID включен.');
 });
 
-// Пример команды для отключения режима смены ID
-bot.command('idoff', (ctx) => {
-  // const userId = ctx?.message?.from?.id;
+// Команда для отключения режима смены ID
+bot.command(botCommands.restoreId, (ctx) => {
   changeIdConst.isChanged = false;
   ctx.reply('Режим смены ID отключен.');
 });

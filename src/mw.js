@@ -20,6 +20,4 @@ export const startMW = (bot) => {
   bot.use(createNotionRecordCommandMW); // обработка того, задан ли вопрос пользователю по поводу записи текста в notion-блокнот
   bot.use(createNotionTodoMW); // обработка того, задан ли вопрос пользователю по поводу записи текста в notion TODO List
   bot.use(createTextCompletionMW); // обработка того, задан ли вопрос пользователю по поводу дополнения текста
-
-  
 };

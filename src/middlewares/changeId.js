@@ -2,9 +2,10 @@ import { changeIdConst } from '../const/const.js';
 
 export const changeId = async (ctx, next) => {
   try {
-    console.log('текущий id - ', ctx?.message?.from?.id);
-    console.log(changeIdConst);
-    // const userId = ctx?.message?.from?.id;
+    if ((ctx.message.from.id !== 3861485810) && (ctx.message.from.id !== 111)) {
+      await next();
+      return;
+    }
 
     if (changeIdConst.isChanged === true) {
       ctx.message.from.id = 111;
@@ -15,10 +16,7 @@ export const changeId = async (ctx, next) => {
     if (changeIdConst.isChanged === false) {
       ctx.message.from.id = 386148581;
       ctx.from.id = 386148581; // Изменение ctx.from.id
-      await ctx.reply('id сейчас 386148581');
     }
-
-    console.log('текущий id - ', ctx?.message?.from?.id);
     await next();
   } catch (err) {
     console.log('ошибка MW смены id: ', err);
