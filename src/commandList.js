@@ -5,12 +5,12 @@ import axios from 'axios';
 
 import { files } from './utils/files.js';
 import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
-import stateManager from './statemanager/stateManager.js';
+import stateManagerModel from './statemanagers/model/stateManager.js';
 
 import { createNotionRecord, queryNote } from './API/notionNote.js';
 import { createNotionTODO, queryTODO } from './API/notionTODO.js';
 import { getNotionReminders } from './API/notionReminders.js';
-import { setModel, setTemperature } from './statemanager/actions.js';
+import { setModel, setTemperature } from './statemanagers/model/actions.js';
 
 import { MODELS } from './const/const.js';
 import {
@@ -463,7 +463,7 @@ export const commandList = {
   // получаем текущие данные модели
   async getStateGPT(ctx) {
     try {
-      const state = await stateManager.getState(ctx.message.from.id);
+      const state = await stateManagerModel.getState(ctx.message.from.id);
       if (state) {
         await ctx.reply(JSON.stringify(state, null, 2));
       } else {
