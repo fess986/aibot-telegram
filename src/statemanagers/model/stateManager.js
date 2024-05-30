@@ -1,5 +1,5 @@
 // import { DEFAULT_MODEL_STATE } from "../const/const";
-import { MODELS } from '../const/const.js';
+import { MODELS } from '../../const/const.js';
 
 class StateManager {
   constructor() {
@@ -27,5 +27,5 @@ class StateManager {
   }
 }
 
-const stateManager = new StateManager();
-export default stateManager;
+const stateManagerModel = new StateManager();
+export default stateManagerModel;

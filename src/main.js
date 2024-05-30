@@ -13,7 +13,7 @@ import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
-import stateManager from './statemanager/stateManager.js';
+import stateManagerModel from './statemanagers/model/stateManager.js';
 
 import {
   roles,
@@ -250,7 +250,7 @@ bot.on(message('text'), async (ctx) => {
       return;
     }
 
-    const state = stateManager.getState(userId);
+    const state = stateManagerModel.getState(userId);
 
     console.log('Получаем стейт пользователя - ', state);
     console.log('id пользователя - ', userId);
@@ -361,7 +361,7 @@ bot.on(message('voice'), async (ctx) => {
       return;
     }
 
-    const state = stateManager.getState(userIdVoise);
+    const state = stateManagerModel.getState(userIdVoise);
 
     console.log('Получаем стейт пользователя - ', state);
     console.log('id пользователя - ', userIdVoise);
