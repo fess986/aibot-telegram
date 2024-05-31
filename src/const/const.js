@@ -94,4 +94,5 @@ export const stateApplication = {
   askRecordText: 'askRecordText',
   askImageDiscription: 'askImageDiscription',
   createTextCompletion: 'createTextCompletion',
+  askNotionRecord: 'askNotionRecord',
 };
