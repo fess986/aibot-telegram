@@ -1,14 +1,21 @@
 import { openAi } from '../API/openai.js';
 import { commandList } from '../commandList.js';
+import { stateApplication } from '../const/const.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
+import { getUserId } from '../utils/utils.js';
 
 export const createTextCompletionMW = async (ctx, next) => {
   try {
-    if (ctx?.session?.createTextCompletion === true) {
+    const userId = getUserId(ctx);
+    // if (ctx?.session?.createTextCompletion === true) {
+    if (stateManagerApp.getState(userId) === stateApplication.createTextCompletion) {
       const userText = ctx?.update?.message?.text || 'no text';
 
       if (!ctx?.update?.message?.text) {
         ctx.reply('Вы должны были ввести какой-либо текст, в следущий раз будьте чуть внимательнее!');
-        ctx.session.createTextCompletion = false;
+        stateManagerApp.resetState(userId);
+        // ctx.session.createTextCompletion = false;
+
         return;
       }
 

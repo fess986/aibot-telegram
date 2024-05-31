@@ -93,4 +93,5 @@ export const stateApplication = {
   notionTODO: 'notionTODO',
   askRecordText: 'askRecordText',
   askImageDiscription: 'askImageDiscription',
+  createTextCompletion: 'createTextCompletion',
 };

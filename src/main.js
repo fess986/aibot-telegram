@@ -195,7 +195,7 @@ bot.command(botCommands.restoreId, (ctx) => {
 });
 
 // --------------------------- AI-ТЕКСТ --------------------------
-// учим бота общаться через текст
+// общение бота через текст
 bot.on(message('text'), async (ctx) => {
   if (ctx?.session?.createTextFromVoice === true) {
     console.log('Попытка печатать текст при запросе голосового сообщения');
@@ -206,17 +206,6 @@ bot.on(message('text'), async (ctx) => {
     return;
   }
 
-  if (
-    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true || ctx?.session?.askNotionTODO === true
-  ) {
-    ctx.session.askImageDiscription = false;
-    ctx.session.askRecordText = false;
-    ctx.session.createTextCompletion = false;
-    ctx.session.askNotionRecord = false;
-    ctx.session.askNotionTODO = false;
-    return;
-  }
-
   const userId = getUserId(ctx);
   if (!userId) {
     console.log('ошибка userId');
@@ -224,10 +213,24 @@ bot.on(message('text'), async (ctx) => {
   }
 
   // выполняем проверку - если стейт приложения не дефолтный, то сбрасываем его на дефолт и ничего больше не делаем
-  console.log('мы тута!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
   if (stateManagerApp.getState(userId) !== stateApplication.default) {
     stateManagerApp.resetState(userId);
-    console.log('Сбрасываем стейт приложения на дефолт');
+    return;
+  }
+
+  if (
+    // askNotionTODO
+    // askRecordText
+    // askImageDiscription
+    // createTextCompletion
+
+    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true || ctx?.session?.askNotionTODO === true
+  ) {
+    ctx.session.askImageDiscription = false;
+    ctx.session.askRecordText = false;
+    ctx.session.createTextCompletion = false;
+    ctx.session.askNotionRecord = false;
+    ctx.session.askNotionTODO = false;
     return;
   }
 
