@@ -87,3 +87,8 @@ export const DEFAULT_MODEL_STATE = {
 export const changeIdConst = {
   isChanged: false,
 };
+
+export const stateApplication = {
+  default: 'default',
+  notionTODO: 'notionTODO',
+};

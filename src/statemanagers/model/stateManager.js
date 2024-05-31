@@ -7,6 +7,8 @@ class StateManager {
   }
 
   initializeState(userId) {
+    if (!userId) return;
+
     if (!this.state[userId]) {
       this.state[userId] = {
         model: MODELS.gpt4o,

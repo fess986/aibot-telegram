@@ -2,7 +2,7 @@ import { changeIdConst } from '../const/const.js';
 
 export const changeId = async (ctx, next) => {
   try {
-    if ((ctx.message.from.id !== 3861485810) && (ctx.message.from.id !== 111)) {
+    if ((ctx?.message?.from?.id !== 386148581) && (ctx?.message?.from?.id !== 111)) {
       await next();
       return;
     }
