@@ -95,4 +95,5 @@ export const stateApplication = {
   askImageDiscription: 'askImageDiscription',
   createTextCompletion: 'createTextCompletion',
   askNotionRecord: 'askNotionRecord',
+  createTextFromVoice: 'createTextFromVoice',
 };

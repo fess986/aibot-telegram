@@ -197,18 +197,20 @@ bot.command(botCommands.restoreId, (ctx) => {
 // --------------------------- AI-ТЕКСТ --------------------------
 // общение бота через текст
 bot.on(message('text'), async (ctx) => {
-  if (ctx?.session?.createTextFromVoice === true) {
+  const userId = getUserId(ctx);
+  if (!userId) {
+    console.log('ошибка userId');
+    return;
+  }
+
+  // if (ctx?.session?.createTextFromVoice === true) {
+  if (stateManagerApp.getState(userId) === stateApplication.createTextFromVoice) {
     console.log('Попытка печатать текст при запросе голосового сообщения');
     ctx.reply(
       'Вы попытались напечатать текст, а ожидалось голосовое сообщение. Вы плохо поступили! Ожидание голосового сообщения завершено, текст проигнорирован!',
     );
-    ctx.session.createTextFromVoice = false;
-    return;
-  }
-
-  const userId = getUserId(ctx);
-  if (!userId) {
-    console.log('ошибка userId');
+    // ctx.session.createTextFromVoice = false;
+    stateManagerApp.resetState(userId);
     return;
   }
 
@@ -219,10 +221,11 @@ bot.on(message('text'), async (ctx) => {
   }
 
   if (
-    // askNotionTODO
-    // askRecordText
-    // askImageDiscription
-    // createTextCompletion
+  // askNotionTODO
+  // askRecordText
+  // askImageDiscription
+  // createTextCompletion
+  // askNotionRecord
 
     ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true || ctx?.session?.askNotionTODO === true
   ) {
