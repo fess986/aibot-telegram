@@ -55,8 +55,12 @@ export const bonusButtons = async (ctx) => {
     ctx1.reply(
       'Произнесите голосом текст, который вы хотите увидеть в напечатанном виде',
     );
-    ctx.session.createTextFromVoice ??= true;
-    ctx.session.createTextFromVoice = true;
+    // ctx.session.createTextFromVoice ??= true;
+    // ctx.session.createTextFromVoice = true;
+
+    const userId = getUserId(ctx1);
+    stateManagerApp.setState(userId, stateApplication.createTextFromVoice);
+    console.log(stateManagerApp.getState(userId));
   });
 
   bot.action('textCompletion', async (ctx1) => {

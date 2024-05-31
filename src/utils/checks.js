@@ -1,6 +1,8 @@
 import { commandList } from '../commandList.js';
-import { ERROR_MESSAGES } from '../const/const.js';
+import { ERROR_MESSAGES, stateApplication } from '../const/const.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
 import { files } from './files.js';
+import { getUserId } from './utils.js';
 
 export const checkLength = async (ctx, length) => {
   console.log(length);
@@ -32,15 +34,17 @@ export const checkVoice = async (ctx, text) => {
 
   const splitedText = text.split(' ');
   const [firstWord, secondWord, thirdWord, forthWord, ...rest] = splitedText;
-
+  const userId = getUserId(ctx);
   // проверим, ожидается ли печать текста
-  if (ctx?.session?.createTextFromVoice === true) {
+  // if (ctx?.session?.createTextFromVoice === true) {
+  if (stateManagerApp.getState(userId) === stateApplication.createTextFromVoice) {
     await ctx.replyWithHTML('<b>Ваш текст:</b>');
     await ctx.reply(`${text}`);
 
-    ctx.session.createTextFromVoice ??= false; // если в настройках линтера мы прописываем стандарт ECMAScript 2021, то такая конструкция начинает работать, иначе пишем как внизу указано
-    // ctx.session.createTextFromVoice = ctx.session.createTextFromVoice || false;
-    ctx.session.createTextFromVoice = false;
+    // ctx.session.createTextFromVoice ??= false; // если в настройках линтера мы прописываем стандарт ECMAScript 2021, то такая конструкция начинает работать, иначе пишем как внизу указано
+    // // ctx.session.createTextFromVoice = ctx.session.createTextFromVoice || false;
+    // ctx.session.createTextFromVoice = false;
+    stateManagerApp.resetState(userId);
     return true;
   }
 
