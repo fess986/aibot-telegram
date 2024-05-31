@@ -33,17 +33,20 @@ export const notionButtons = async (ctx) => {
       context.reply(
         'Введите сообщение для записи в notion.',
       );
-      context.session.askNotionRecord = true;
+      // context.session.askNotionRecord = true;
+
+      const userId = context.from.id;
+      stateManagerApp.setState(userId, stateApplication.askNotionRecord);
     });
 
-    bot.action('notionTODO', async (ctx) => {
+    bot.action('notionTODO', async (ctx1) => {
       await ctx.answerCbQuery();
       ctx.reply(
         'Введите сообщение для записи в notion1.',
       );
       // ctx.session.askNotionTODO = true;
 
-      const userId = ctx.from.id;
+      const userId = ctx1.from.id;
       stateManagerApp.setState(userId, stateApplication.notionTODO);
     });
 
