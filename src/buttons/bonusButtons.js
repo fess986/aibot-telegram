@@ -1,6 +1,9 @@
 import { Markup } from 'telegraf';
 import { bot } from '../bot.js';
 import { commandList } from '../commandList.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
+import { stateApplication } from '../const/const.js';
+import { getUserId } from '../utils/utils.js';
 
 export const bonusButtons = async (ctx) => {
   try {
@@ -61,7 +64,11 @@ export const bonusButtons = async (ctx) => {
     ctx1.replyWithHTML(
       'Начните печатать текст, который вы хотите чтобы АИ дополнил. Лучше использовать <b> Английский язык </b> - так текст будет гораздо длиннее',
     );
-    ctx1.session.createTextCompletion ??= true;
-    ctx1.session.createTextCompletion = true;
+    // ctx1.session.createTextCompletion ??= true;
+    // ctx1.session.createTextCompletion = true;
+
+    const userId = getUserId(ctx1);
+    stateManagerApp.setState(userId, stateApplication.createTextCompletion);
+    console.log(stateManagerApp.getState(userId));
   });
 };
