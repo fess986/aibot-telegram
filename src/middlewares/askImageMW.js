@@ -1,16 +1,17 @@
 import { Input } from 'telegraf';
 
 import { openAi } from '../API/openai.js';
-import { ERROR_MESSAGES } from '../const/const.js';
+import { ERROR_MESSAGES, stateApplication } from '../const/const.js';
 import { commandList } from '../commandList.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
+import { getUserId } from '../utils/utils.js';
 
 export const askImageMW = async (ctx, next) => {
   try {
-    if (ctx?.session?.askImageDiscription === true) {
-      console.log(
-        'обработка запроса описания картинки',
-        ctx.session.askImageDiscription,
-      );
+    const userId = getUserId(ctx);
+    // if (ctx?.session?.askImageDiscription === true) {
+    if (stateManagerApp.getState(userId) === stateApplication.askImageDiscription) {
+      console.log('обработка запроса описания картинки');
 
       await ctx.replyWithHTML(
         `Картинка по вашему запросу: <b>"${ctx.message.text}"</b> - создается, подождите немного... `,
@@ -20,8 +21,7 @@ export const askImageMW = async (ctx, next) => {
 
       if (url === 'ошибка') {
         await ctx.reply(ERROR_MESSAGES.timeOutImage);
-        ctx.session.askImageDiscription = false;
-
+        stateManagerApp.resetState(userId);
         return;
       }
 

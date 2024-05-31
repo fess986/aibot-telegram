@@ -13,7 +13,7 @@ import { createNotionTODO, queryTODO } from './API/notionTODO.js';
 import { getNotionReminders } from './API/notionReminders.js';
 import { setModel, setTemperature } from './statemanagers/model/actions.js';
 
-import { MODELS } from './const/const.js';
+import { MODELS, stateApplication } from './const/const.js';
 import {
   INIT_SESSION,
   CONTEXT_MAX,
@@ -249,7 +249,9 @@ export const commandList = {
       ctx.reply(
         'Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке...',
       );
-      ctx.session.askImageDiscription = true;
+      // ctx.session.askImageDiscription = true;
+      const userId = getUserId(ctx);
+      stateManagerApp.setState(userId, stateApplication.askImageDiscription);
     } catch (err) {
       commandList.rebootBot(ctx, 'Ошибка запроса на создание картинки');
     }

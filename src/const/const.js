@@ -92,4 +92,5 @@ export const stateApplication = {
   default: 'default',
   notionTODO: 'notionTODO',
   askRecordText: 'askRecordText',
+  askImageDiscription: 'askImageDiscription',
 };
