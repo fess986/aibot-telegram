@@ -65,3 +65,7 @@ export function fromWho(id) {
 
   return userName;
 }
+
+export function getUserId(ctx) {
+  return ctx?.message?.from?.id ?? ctx?.update?.callback_query?.from?.id ?? ctx?.from?.id ?? null;
+}

@@ -4,8 +4,9 @@ import config from 'config';
 import axios from 'axios';
 
 import { files } from './utils/files.js';
-import removeFile, { deleteFolderRecursive, fromWho } from './utils/utils.js';
+import removeFile, { deleteFolderRecursive, fromWho, getUserId } from './utils/utils.js';
 import stateManagerModel from './statemanagers/model/stateManager.js';
+import stateManagerApp from './statemanagers/application/stateManager.js';
 
 import { createNotionRecord, queryNote } from './API/notionNote.js';
 import { createNotionTODO, queryTODO } from './API/notionTODO.js';
@@ -20,7 +21,6 @@ import {
   CONTEXT_CHAT_BOT,
   CONTEXT_DEVOPS,
 } from './const/context.js';
-import { changeId } from './middlewares/changeId.js';
 
 export const commandList = {
   async newSession(ctx) {
@@ -46,6 +46,13 @@ export const commandList = {
       ctx.session.askNotionTODO = false;
       ctx.session.sessionLength = ctx.session.sessionLength || 0;
       ctx.session.sessionLength = 0;
+
+      const userId = getUserId(ctx);
+      if (!userId) {
+        console.log('ошибка userId');
+        return;
+      }
+      stateManagerApp.resetState(userId);
 
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',

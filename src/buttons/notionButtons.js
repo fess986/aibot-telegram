@@ -4,6 +4,9 @@ import config from 'config';
 import { bot } from '../bot.js';
 import { commandList } from '../commandList.js';
 
+import { stateApplication } from '../const/const.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
+
 const myId = config.get('ALLOWED_USERS')[0];
 
 export const notionButtons = async (ctx) => {
@@ -33,12 +36,15 @@ export const notionButtons = async (ctx) => {
       context.session.askNotionRecord = true;
     });
 
-    bot.action('notionTODO', async (context) => {
-      await context.answerCbQuery();
-      context.reply(
-        'Введите сообщение для записи в notion.',
+    bot.action('notionTODO', async (ctx) => {
+      await ctx.answerCbQuery();
+      ctx.reply(
+        'Введите сообщение для записи в notion1.',
       );
-      context.session.askNotionTODO = true;
+      // ctx.session.askNotionTODO = true;
+
+      const userId = ctx.from.id;
+      stateManagerApp.setState(userId, stateApplication.notionTODO);
     });
 
     bot.action('getNotionTodo', async (context) => {

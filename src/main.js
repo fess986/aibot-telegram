@@ -3,7 +3,7 @@ import { code } from 'telegraf/format'; // специальная фишка, к
 import config from 'config'; // для того чтобы можно было считывать настройки приложения из папки конфига]
 
 import { ogg } from './utils/oggToMp3.js';
-import { fromWho } from './utils/utils.js';
+import { fromWho, getUserId } from './utils/utils.js';
 import { checkLength, checkVoice } from './utils/checks.js';
 import { openAi } from './API/openai.js';
 import { commandList } from './commandList.js';
@@ -14,6 +14,7 @@ import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
 
 import stateManagerModel from './statemanagers/model/stateManager.js';
+import stateManagerApp from './statemanagers/application/stateManager.js';
 
 import {
   roles,
@@ -21,7 +22,7 @@ import {
 } from './const/context.js';
 
 import {
-  ERROR_MESSAGES, botCommands, settingsMessage, changeIdConst,
+  ERROR_MESSAGES, botCommands, settingsMessage, changeIdConst, stateApplication,
 } from './const/const.js';
 
 console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
@@ -216,6 +217,20 @@ bot.on(message('text'), async (ctx) => {
     return;
   }
 
+  const userId = getUserId(ctx);
+  if (!userId) {
+    console.log('ошибка userId');
+    return;
+  }
+
+  // выполняем проверку - если стейт приложения не дефолтный, то сбрасываем его на дефолт и ничего больше не делаем
+  console.log('мы тута!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!')
+  if (stateManagerApp.getState(userId) !== stateApplication.default) {
+    stateManagerApp.resetState(userId);
+    console.log('Сбрасываем стейт приложения на дефолт');
+    return;
+  }
+
   try {
     const firstLetter = ctx?.message?.text?.charAt(0);
     if (firstLetter === '/') {
@@ -243,12 +258,6 @@ bot.on(message('text'), async (ctx) => {
     await ctx.reply(code('Текстовое сообщение принято, обрабатывается...'));
 
     // textLoader.show();
-
-    const userId = ctx?.message?.from?.id ?? ctx?.update?.callback_query?.from?.id;
-    if (!userId) {
-      console.log('ошибка userId');
-      return;
-    }
 
     const state = stateManagerModel.getState(userId);
 
