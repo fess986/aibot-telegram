@@ -1,6 +1,9 @@
 import { Markup } from 'telegraf';
 import { bot } from '../bot.js';
 import { commandList } from '../commandList.js';
+import { getUserId } from '../utils/utils.js';
+import { stateApplication } from '../const/const.js';
+import stateManagerApp from '../statemanagers/application/stateManager.js';
 
 export const recordButtons = async (ctx) => {
   try {
@@ -18,7 +21,9 @@ export const recordButtons = async (ctx) => {
       ctx1.reply(
         'Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальные слова - текст записи.',
       );
-      ctx1.session.askRecordText = true;
+      // ctx1.session.askRecordText = true;
+      const userId = getUserId(ctx1);
+      stateManagerApp.setState(userId, stateApplication.askRecordText);
     });
 
     bot.action('sendRecord', async (ctx1) => {
