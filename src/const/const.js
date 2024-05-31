@@ -91,4 +91,5 @@ export const changeIdConst = {
 export const stateApplication = {
   default: 'default',
   notionTODO: 'notionTODO',
+  askRecordText: 'askRecordText',
 };
