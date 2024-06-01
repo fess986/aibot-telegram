@@ -26,6 +26,6 @@ export const allowedListMW = async (ctx, next) => {
       'ошибка MW ограничения бот-листа: ',
       err,
     );
-    await next();
+    // await next();
   }
 };

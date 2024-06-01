@@ -8,7 +8,9 @@ export const createTextCompletionMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
     // if (ctx?.session?.createTextCompletion === true) {
+      console.log('дополнение текстааааааааааааааааа11111111')
     if (stateManagerApp.getState(userId) === stateApplication.createTextCompletion) {
+      console.log('дополнение текстааааааааааааааааа22222222222')
       const userText = ctx?.update?.message?.text || 'no text';
 
       if (!ctx?.update?.message?.text) {
@@ -25,7 +27,7 @@ export const createTextCompletionMW = async (ctx, next) => {
       if (response === 'ошибка') {
         await ctx.reply('Вылет по таймауту. Повторите свой запрос позже');
 
-        await next();
+        // await next();
         return;
       }
 
@@ -42,6 +44,6 @@ export const createTextCompletionMW = async (ctx, next) => {
       'ошибка MW обработки дополнения текста ',
       err,
     );
-    await next();
+    // await next();
   }
 };

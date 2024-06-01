@@ -7,7 +7,6 @@ import archiver from 'archiver';
 
 // eslint-disable-next-line no-underscore-dangle
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-console.log(__dirname);
 
 class Files {
   // функционал записи текста в папку records, который вызывается из голосового сообщения, которое начинается с фразы "запись на тему ..."

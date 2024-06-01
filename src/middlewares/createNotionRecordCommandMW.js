@@ -14,9 +14,9 @@ export const createNotionRecordCommandMW = async (ctx, next) => {
   } catch (err) {
     await commandList.rebootBot(
       ctx,
-      'ошибка MW обработки вопроса о создании записи: ',
+      'ошибка MW обработки вопроса о создании записи в ноушн: ',
       err,
     );
-    await next();
+    // await next();
   }
 };
