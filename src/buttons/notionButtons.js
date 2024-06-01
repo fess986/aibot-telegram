@@ -34,9 +34,7 @@ export const notionButtons = async (ctx) => {
       context.reply(
         'Введите сообщение для записи в notion.',
       );
-      // context.session.askNotionRecord = true;
 
-      // const userId = context.from.id;
       const userId = getUserId(context);
       stateManagerApp.setState(userId, stateApplication.askNotionRecord);
     });
@@ -46,9 +44,7 @@ export const notionButtons = async (ctx) => {
       ctx1.reply(
         'Введите сообщение для записи в notion1.',
       );
-      // ctx.session.askNotionTODO = true;
 
-      // const userId = ctx1.from.id;
       const userId = getUserId(ctx1);
       console.log(userId);
       stateManagerApp.setState(userId, stateApplication.notionTODO);

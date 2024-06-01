@@ -6,10 +6,9 @@ import { getUserId } from '../utils/utils.js';
 export const createNotionTodoMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
-    console.log(stateManagerApp.getState(userId));
-    console.log(stateApplication.notionTODO);
 
     if (stateManagerApp.getState(userId) === stateApplication.notionTODO) {
+      console.log('создаётся запись в TODO для пользователя', userId);
       await commandList.createNotionRecordCommand(ctx, 'button', 'todo');
     }
     await next();
@@ -19,6 +18,5 @@ export const createNotionTodoMW = async (ctx, next) => {
       'ошибка MW обработки вопроса о создании записи в TODO: ',
       err,
     );
-    // await next();
   }
 };

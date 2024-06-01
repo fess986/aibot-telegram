@@ -220,23 +220,6 @@ bot.on(message('text'), async (ctx) => {
     return;
   }
 
-  if (
-  // askNotionTODO
-  // askRecordText
-  // askImageDiscription
-  // createTextCompletion
-  // askNotionRecord
-
-    ctx?.session?.askImageDiscription === true || ctx?.session?.askRecordText === true || ctx?.session?.createTextCompletion === true || ctx?.session?.askNotionRecord === true || ctx?.session?.askNotionTODO === true
-  ) {
-    ctx.session.askImageDiscription = false;
-    ctx.session.askRecordText = false;
-    ctx.session.createTextCompletion = false;
-    ctx.session.askNotionRecord = false;
-    ctx.session.askNotionTODO = false;
-    return;
-  }
-
   try {
     const firstLetter = ctx?.message?.text?.charAt(0);
     if (firstLetter === '/') {

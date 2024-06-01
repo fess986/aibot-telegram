@@ -6,7 +6,6 @@ export const currentDateMW = async (ctx, next) => {
     const currentDate = new Date(); // получаем текущую дату и время
 
     if (!ctx.session) {
-      // Проверяем существует ли объект ctx.session
       ctx.session = {};
     }
     ctx.session.currentDate = currentDate; // сохраняем дату и время в сессионное хранилище
@@ -29,6 +28,5 @@ export const currentDateMW = async (ctx, next) => {
       'ошибка MW добавления системного времени в контекст разговора: ',
       err,
     );
-    // await next();
   }
 };

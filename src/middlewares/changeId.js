@@ -20,6 +20,5 @@ export const changeId = async (ctx, next) => {
     await next();
   } catch (err) {
     console.log('ошибка MW смены id: ', err);
-    // next();
   }
 };

@@ -9,7 +9,6 @@ import { getUserId } from '../utils/utils.js';
 export const askImageMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
-    // if (ctx?.session?.askImageDiscription === true) {
     if (stateManagerApp.getState(userId) === stateApplication.askImageDiscription) {
       console.log('обработка запроса описания картинки');
 
@@ -34,6 +33,5 @@ export const askImageMW = async (ctx, next) => {
       'ошибка MW обработки вопроса об описании текста картинки: ',
       err,
     );
-    // await next();
   }
 };

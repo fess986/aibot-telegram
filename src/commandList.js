@@ -32,18 +32,6 @@ export const commandList = {
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
       ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
 
-      // ctx.session.askImageDiscription ??= false; // ??= - нуль-исключение. Значение справа присваивается только в том случае, если слева null или undefined
-      ctx.session.askImageDiscription = ctx.session.askImageDiscription || false;
-      ctx.session.askImageDiscription = false;
-      // ctx.session.askRecordText ??= false;
-      ctx.session.askRecordText = ctx.session.askRecordText || false;
-      ctx.session.askRecordText = false;
-      ctx.session.createTextCompletion = ctx.session.createTextCompletion || false;
-      ctx.session.createTextCompletion = false;
-      ctx.session.askNotionRecord = ctx.session.askNotionRecord || false;
-      ctx.session.askNotionRecord = false;
-      // ctx.session.askNotionTODO = ctx.session.askNotionTODO || false;
-      // ctx.session.askNotionTODO = false;
       ctx.session.sessionLength = ctx.session.sessionLength || 0;
       ctx.session.sessionLength = 0;
 
@@ -52,7 +40,7 @@ export const commandList = {
         console.log('ошибка userId');
         return;
       }
-      stateManagerApp.resetState(userId);
+      stateManagerApp.resetState(userId); // устанавливаем состояние приложение в дефолтное
 
       await ctx.reply(
         'Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!',
@@ -249,7 +237,6 @@ export const commandList = {
       ctx.reply(
         'Опишите картинку, которую вы так мечтаете увидеть? Лучше на английском языке...',
       );
-      // ctx.session.askImageDiscription = true;
       const userId = getUserId(ctx);
       stateManagerApp.setState(userId, stateApplication.askImageDiscription);
     } catch (err) {

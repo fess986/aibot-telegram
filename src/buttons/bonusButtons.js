@@ -68,8 +68,6 @@ export const bonusButtons = async (ctx) => {
     ctx1.replyWithHTML(
       'Начните печатать текст, который вы хотите чтобы АИ дополнил. Лучше использовать <b> Английский язык </b> - так текст будет гораздо длиннее',
     );
-    // ctx1.session.createTextCompletion ??= true;
-    // ctx1.session.createTextCompletion = true;
 
     const userId = getUserId(ctx1);
     stateManagerApp.setState(userId, stateApplication.createTextCompletion);

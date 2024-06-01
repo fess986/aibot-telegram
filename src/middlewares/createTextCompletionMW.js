@@ -7,16 +7,13 @@ import { getUserId } from '../utils/utils.js';
 export const createTextCompletionMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
-    // if (ctx?.session?.createTextCompletion === true) {
-      console.log('дополнение текстааааааааааааааааа11111111')
+
     if (stateManagerApp.getState(userId) === stateApplication.createTextCompletion) {
-      console.log('дополнение текстааааааааааааааааа22222222222')
       const userText = ctx?.update?.message?.text || 'no text';
 
       if (!ctx?.update?.message?.text) {
         ctx.reply('Вы должны были ввести какой-либо текст, в следущий раз будьте чуть внимательнее!');
         stateManagerApp.resetState(userId);
-        // ctx.session.createTextCompletion = false;
 
         return;
       }
@@ -27,7 +24,6 @@ export const createTextCompletionMW = async (ctx, next) => {
       if (response === 'ошибка') {
         await ctx.reply('Вылет по таймауту. Повторите свой запрос позже');
 
-        // await next();
         return;
       }
 
@@ -35,7 +31,7 @@ export const createTextCompletionMW = async (ctx, next) => {
     const responseText = response?.choices[0]?.text || 'По какой то причине текст не был сформирован';
 
       await ctx.reply(responseText);
-      console.log(responseText);
+      console.log('дополнение текста: ', responseText);
     }
     await next();
   } catch (err) {
@@ -44,6 +40,5 @@ export const createTextCompletionMW = async (ctx, next) => {
       'ошибка MW обработки дополнения текста ',
       err,
     );
-    // await next();
   }
 };
