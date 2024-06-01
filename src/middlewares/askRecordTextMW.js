@@ -7,8 +7,8 @@ export const askRecordTextMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
 
-    // if (ctx?.session?.askRecordText === true) {
     if (stateManagerApp.getState(userId) === stateApplication.askRecordText) {
+      console.log('создаётся запись для пользователя', userId);
       await commandList.createRecord(ctx, 'button');
     }
 
@@ -19,6 +19,5 @@ export const askRecordTextMW = async (ctx, next) => {
       'ошибка MW обработки вопроса о создании записи в файл: ',
       err,
     );
-    // await next();
   }
 };

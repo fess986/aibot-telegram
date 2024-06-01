@@ -21,13 +21,12 @@ export const recordButtons = async (ctx) => {
       ctx1.reply(
         'Введите сообщение для записи. Первое слово записи будет соответствовать названию папки для записи. Остальные слова - текст записи.',
       );
-      // ctx1.session.askRecordText = true;
       const userId = getUserId(ctx1);
       stateManagerApp.setState(userId, stateApplication.askRecordText);
     });
 
     bot.action('sendRecord', async (ctx1) => {
-      // await ctx.answerCbQuery();
+      await ctx1.answerCbQuery();
       await commandList.sendRecords(ctx1, bot);
     });
 

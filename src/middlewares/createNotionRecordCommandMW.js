@@ -6,8 +6,9 @@ import { stateApplication } from '../const/const.js';
 export const createNotionRecordCommandMW = async (ctx, next) => {
   try {
     const userId = getUserId(ctx);
-    // if (ctx?.session?.askNotionRecord === true) {
+
     if (stateManagerApp.getState(userId) === stateApplication.askNotionRecord) {
+      console.log('создаётся запись для пользователя', userId);
       await commandList.createNotionRecordCommand(ctx, 'button');
     }
     await next();
@@ -17,6 +18,5 @@ export const createNotionRecordCommandMW = async (ctx, next) => {
       'ошибка MW обработки вопроса о создании записи в ноушн: ',
       err,
     );
-    // await next();
   }
 };
