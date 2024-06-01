@@ -16,7 +16,7 @@ export const currentDateMW = async (ctx, next) => {
       role: roles.SYSTEM,
       content: `Системное время: ${currentDate}`,
     });
-    console.log(ctx.session);
+    // console.log(ctx.session);
 
     // console.time(`Processing update ${ctx.update.update_id}`); - запуск счетчика времени выполнения процессов
 
@@ -29,6 +29,6 @@ export const currentDateMW = async (ctx, next) => {
       'ошибка MW добавления системного времени в контекст разговора: ',
       err,
     );
-    await next();
+    // await next();
   }
 };

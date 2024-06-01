@@ -34,6 +34,6 @@ export const askImageMW = async (ctx, next) => {
       'ошибка MW обработки вопроса об описании текста картинки: ',
       err,
     );
-    await next();
+    // await next();
   }
 };
