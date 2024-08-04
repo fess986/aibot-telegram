@@ -1,5 +1,4 @@
-// import { DEFAULT_MODEL_STATE } from "../const/const";
-import { MODELS } from '../../const/const.js';
+import { DEFAULT_MODEL_STATE } from '../../const/const.js';
 
 class StateManager {
   constructor() {
@@ -11,8 +10,8 @@ class StateManager {
 
     if (!this.state[userId]) {
       this.state[userId] = {
-        model: MODELS.gpt4o,
-        temperature: 0.4,
+        model: DEFAULT_MODEL_STATE.model,
+        temperature: DEFAULT_MODEL_STATE.temperature,
       };
     }
   }

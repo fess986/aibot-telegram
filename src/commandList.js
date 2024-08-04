@@ -4,7 +4,11 @@ import config from 'config';
 import axios from 'axios';
 
 import { files } from './utils/files.js';
-import removeFile, { deleteFolderRecursive, fromWho, getUserId } from './utils/utils.js';
+import removeFile, {
+  deleteFolderRecursive,
+  fromWho,
+  getUserId,
+} from './utils/utils.js';
 import stateManagerModel from './statemanagers/model/stateManager.js';
 import stateManagerApp from './statemanagers/application/stateManager.js';
 
@@ -26,7 +30,9 @@ export const commandList = {
   async newSession(ctx) {
     try {
       console.log('..............Обнуление сессии...............');
-      console.log(`from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`);
+      console.log(
+        `from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`,
+      );
       console.log('обнуление произвел - ', fromWho(ctx?.from?.id));
       ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
@@ -123,7 +129,7 @@ export const commandList = {
   },
 
   async changeId(ctx) {
-    if ((!ctx.session.changeId) || (ctx?.session?.changeId === false)) {
+    if (!ctx.session.changeId || ctx?.session?.changeId === false) {
       ctx.session.changeId = true;
     } else {
       ctx.session.changeId = false;
@@ -267,7 +273,9 @@ export const commandList = {
       }
 
       const pattern = /[A-Za-zА-Яа-яЁё0-9]+/g; // убираем лишние знаки из строки запроса
-      const theme = themeWithSigns.match(pattern) !== null ? themeWithSigns.match(pattern)[0].toLowerCase() : 'default';
+      const theme =				themeWithSigns.match(pattern) !== null
+				  ? themeWithSigns.match(pattern)[0].toLowerCase()
+				  : 'default';
 
       const data = rest.join(' ');
       const user = ctx.message.from.last_name;
@@ -285,7 +293,9 @@ export const commandList = {
 
   async sendRecords(ctx, bot) {
     try {
-      const user = (await ctx?.message?.from?.last_name) ?? ctx?.update?.callback_query?.from?.last_name ?? 'user'; // в зависимости от того, когда происходит действие, объект контекста может различаться, например если он вызывается при нажатии кнопки действия кейпада, у него не будет поля ctx.message.from , но зато будет ctx.update.callback_query.from? , поэтому мы проверяем наличие всех этих полей чтобы не схватить ошибку.
+      const user =				(await ctx?.message?.from?.last_name)
+				?? ctx?.update?.callback_query?.from?.last_name
+				?? 'user'; // в зависимости от того, когда происходит действие, объект контекста может различаться, например если он вызывается при нажатии кнопки действия кейпада, у него не будет поля ctx.message.from , но зато будет ctx.update.callback_query.from? , поэтому мы проверяем наличие всех этих полей чтобы не схватить ошибку.
 
       const recordsExist = files.areRecordsExists(user);
 
@@ -315,7 +325,9 @@ export const commandList = {
 
   async removeRecords(ctx) {
     try {
-      const user = (await ctx?.message?.from?.last_name) ?? ctx?.update?.callback_query?.from?.last_name ?? 'user';
+      const user =				(await ctx?.message?.from?.last_name)
+				?? ctx?.update?.callback_query?.from?.last_name
+				?? 'user';
 
       const recordsPath = files.recordsPath(user);
 
@@ -379,7 +391,9 @@ export const commandList = {
       }
 
       // const response = await createNotionRecord(data);
-      await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
+      await ctx.reply(
+        `Создана новая запись в notion. Ссылка на неё: ${response.url}`,
+      );
     } catch (err) {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
@@ -389,7 +403,9 @@ export const commandList = {
   async createNotionVoiceCommand(ctx, data) {
     try {
       const response = await createNotionRecord(data);
-      await ctx.reply(`Создана новая запись в notion. Ссылка на неё: ${response.url}`);
+      await ctx.reply(
+        `Создана новая запись в notion. Ссылка на неё: ${response.url}`,
+      );
     } catch (err) {
       console.log('ошибка добавление записи в ноушен', err.message);
     }
@@ -399,7 +415,9 @@ export const commandList = {
   async createNotionTODOVoiceCommand(ctx, data) {
     try {
       const response = await createNotionTODO(data);
-      await ctx.reply(`Создана новая запись в notion TODO List. Ссылка на неё: ${response.url}`);
+      await ctx.reply(
+        `Создана новая запись в notion TODO List. Ссылка на неё: ${response.url}`,
+      );
     } catch (err) {
       console.log('ошибка добавления записи в ноушен TODO List', err.message);
     }
@@ -412,7 +430,10 @@ export const commandList = {
       const formattedList = list.join('\n');
       ctx.reply(formattedList);
     } catch (err) {
-      console.log('ошибка получения записей из ноушен - TODO List - а', err.message);
+      console.log(
+        'ошибка получения записей из ноушен - TODO List - а',
+        err.message,
+      );
     }
   },
 
@@ -451,6 +472,15 @@ export const commandList = {
   async setGPT4(ctx) {
     try {
       await setModel(ctx, MODELS.gpt4o);
+    } catch (err) {
+      console.log('ошибка установки модели 4', err.message);
+    }
+  },
+
+  // устанавливаем модель gpt4о
+  async setGPT4_mini(ctx) {
+    try {
+      await setModel(ctx, MODELS.gpt4o_mini);
     } catch (err) {
       console.log('ошибка установки модели 4', err.message);
     }
