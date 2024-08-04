@@ -47,8 +47,8 @@ export function fromWho(id) {
       userName = 'Андрей Симкин';
       break;
 
-    case 1052290682:
-      userName = 'Какой то - Kinet AI';
+    case 230201671: // добавлен
+      userName = 'Андрей Симкин новый';
       break;
 
     case 386148581:// добавлен
@@ -57,6 +57,14 @@ export function fromWho(id) {
 
     case 283344125:// добавлен
       userName = 'Царьков Cанёк';
+      break;
+
+    case 675796197:// добавлен
+      userName = 'Есин Вячеслав';
+      break;
+
+    case 310804454:// добавлен
+      userName = 'Максим Фролов';
       break;
 
     default:
