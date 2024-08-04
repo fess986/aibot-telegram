@@ -29,6 +29,7 @@ export const settingsMessage = `
 /context - Управление контекстом общения
 /gpt3 - Установка GPT-3.5
 /gpt4 - Установка GPT-4
+/gpt4mini - Установка GPT-4-mini
 /settemp 0.5 - Установка температуры общения по шаблону где 0.5 - новое значение температуры общения. Если не знаете что это такое, просто спросите АИ об этом
 /get - получение текущих данных модели chatGPT
 `;
@@ -66,6 +67,7 @@ export const botCommands = {
 
   setGPT3: 'gpt3', // установка модели gpt3.5
   setGPT4: 'gpt4', // установка модели gpt4о
+  setGPT4_mini: 'gpt4mini', // установка модели gpt4о
   setGptTemp: 'settemp', // установка температуры
   getStateGPT: 'get', // получение текущих данных модели
 };
@@ -74,13 +76,14 @@ export const MODELS = {
   gpt3_5: 'gpt-3.5-turbo',
   gpt3_5_0613: 'gpt-3.5-turbo-0613',
   gpt4o: 'gpt-4o',
+  gpt4o_mini: 'gpt-4o-mini',
   davinci: 'text-davinci-003',
   gpt_instruct: 'gpt-3.5-turbo-instruct',
   whisper: 'whisper-1',
 };
 
 export const DEFAULT_MODEL_STATE = {
-  model: MODELS.gpt4o,
+  model: MODELS.gpt4o_mini,
   temperature: 0.4,
 };
 
