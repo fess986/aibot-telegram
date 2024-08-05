@@ -18,7 +18,6 @@ class StateManager {
 
   getState(userId) {
     this.initializeState(userId); // если нет стейта, создаем
-    console.log('Получаем стейт пользователя - ', this.state[userId]);
     return this.state[userId];
   }
 
