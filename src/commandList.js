@@ -33,7 +33,7 @@ export const commandList = {
       console.log(
         `from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`,
       );
-      console.log('обнуление произвел - ', fromWho(ctx?.from?.id));
+      console.log('обнуление произвел - ', fromWho(ctx?.from?.id), '\n \n');
       ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
       ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));

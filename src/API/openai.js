@@ -60,11 +60,11 @@ class OpenAIClass {
         temperature: state.temperature || 0.4,
       });
 
-      console.log(messages);
+      // console.log(messages);
 
       // ждем ответа от чата.
       const response = await Promise.race([responsePromise, timePromise]);
-      console.log(response);
+      console.log(response.usage);
 
       const responseText = typeof response === 'string' ? 'ошибка' : response.choices[0].message;
 

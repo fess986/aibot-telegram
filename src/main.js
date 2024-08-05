@@ -256,7 +256,7 @@ bot.on(message('text'), async (ctx) => {
     const state = stateManagerModel.getState(userId);
 
     console.log('Получаем стейт пользователя - ', state);
-    console.log('id пользователя - ', userId);
+    // console.log('id пользователя - ', userId);
 
     const response = await openAi.chat(ctx.session.messages, state);
     // const response = await openAi.chat([{ role: 'user', content: 'Say this is a test' }]);
@@ -286,7 +286,7 @@ bot.on(message('text'), async (ctx) => {
     // textLoader.hide();
 
     await ctx.reply(response.content);
-    console.log(`................Ответ полученный от AI................ : \n ${response.content}`);
+    console.log(`----------------Ответ полученный от AI-------------- : \n ${response.content} \n \n`);
   } catch (err) {
     if (err) {
       await commandList.rebootBot(

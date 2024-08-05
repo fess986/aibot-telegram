@@ -5,7 +5,6 @@ import { files } from './files.js';
 import { getUserId } from './utils.js';
 
 export const checkLength = async (ctx, length) => {
-  console.log(length);
   if (length === 4) {
     await ctx.reply('Текущая длинна сессии = 4. Просьба не увеличивать её размер без необходимости, это вызывает более длительные ответы бота.  Для обнуления сессии при смене темы общения с ботом - напишите /new или сделайте это через меню контекста');
     return false;
