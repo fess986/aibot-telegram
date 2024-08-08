@@ -14,7 +14,7 @@ class OpenAIClass {
 
     // локальный бот с использованием OpenAI
     // console.log(apiKey);
-    logger.info(apiKey);
+    // logger.info(apiKey);
   }
 
   async transcription(filePath) {
