@@ -2,6 +2,7 @@ import { createReadStream } from 'fs';
 // import { Configuration, OpenAIApi } from 'openai';
 import OpenAI from 'openai';
 import config from 'config';
+import logger from './logger.js';
 import { MODELS } from '../const/const.js';
 
 class OpenAIClass {
@@ -12,7 +13,8 @@ class OpenAIClass {
     });
 
     // локальный бот с использованием OpenAI
-    console.log(apiKey);
+    // console.log(apiKey);
+    logger.info(apiKey);
   }
 
   async transcription(filePath) {
@@ -35,7 +37,11 @@ class OpenAIClass {
       return responseText;
     } catch (err) {
       // await ctx.reply('Ошибка перевода голоса в текст в аи, текст ошибки: ', err.message)
-      console.log(
+      // console.log(
+      //   'Ошибка перевода голоса в текст в аи, текст ошибки: ',
+      //   err.message,
+      // );
+      logger.error(
         'Ошибка перевода голоса в текст в аи, текст ошибки: ',
         err.message,
       );
@@ -51,7 +57,6 @@ class OpenAIClass {
         setTimeout(() => resolve('ошибка'), 85000);
       });
 
-
       const responsePromise = this.openai.chat.completions.create({
         model: state.model || MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
         // model: MODELS.gpt4o, // модель. в будущем будет доступна еще версия с 4 чатом
@@ -64,13 +69,16 @@ class OpenAIClass {
 
       // ждем ответа от чата.
       const response = await Promise.race([responsePromise, timePromise]);
-      console.log(response.usage);
+      // console.log(response.usage);
+      // logger.info(JSON.stringify(response.usage));
+      logger.info(JSON.stringify(response.usage));
 
       const responseText = typeof response === 'string' ? 'ошибка' : response.choices[0].message;
 
       return responseText;
     } catch (err) {
-      console.log('error chating with gpt', err.message);
+      // console.log('error chating with gpt', err.message);
+      logger.error('error chating with gpt', err.message);
       return null; // Возвращаем null или другое значение по умолчанию в случае ошибки
     }
   }
@@ -99,14 +107,16 @@ class OpenAIClass {
 
       return response;
     } catch (err) {
-      console.log('error AI completion', err.message);
+      // console.log('error AI completion', err.message);
+      logger.error('error AI completion', err.message);
       return null;
     }
   }
 
   async image(text) {
     try {
-      console.log('ass ........................................');
+      // console.log('ass ........................................');
+      logger.error('ass ........................................');
 
       const timePromise = new Promise((resolve) => {
         setTimeout(() => resolve('ошибка'), 60000);
@@ -124,7 +134,8 @@ class OpenAIClass {
 
       return responseData;
     } catch (err) {
-      console.log('ошибка при создании изображения', err.message);
+      // console.log('ошибка при создании изображения', err.message);
+      logger.error('ошибка при создании изображения', err.message);
       return null;
     }
   }

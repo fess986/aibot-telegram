@@ -32,6 +32,8 @@
     "fluent-ffmpeg": "^2.1.2",
     "node": "^16.19.0",
     "openai": "^4.5.0",
-    "telegraf": "^4.12.2"
+    "telegraf": "^4.12.2",
+    "winston": "^3.13.1",
+    "winston-daily-rotate-file": "^5.0.0"
   }
 }

@@ -12,6 +12,7 @@ import { contextButtons } from './buttons/contextButtons.js';
 import { bonusButtons } from './buttons/bonusButtons.js';
 import { recordButtons } from './buttons/recordButtons.js';
 import { notionButtons } from './buttons/notionButtons.js';
+import logger from './API/logger.js';
 
 import stateManagerModel from './statemanagers/model/stateManager.js';
 import stateManagerApp from './statemanagers/application/stateManager.js';
@@ -25,7 +26,8 @@ import {
   ERROR_MESSAGES, botCommands, settingsMessage, changeIdConst, stateApplication,
 } from './const/const.js';
 
-console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
+// console.log(config.get('TEST')); // видимо конфиг умеет понимать по строке cross-env NODE_ENV=development пакаджа, из какого файла брать ключи - из дефолта или продакшена
+logger.info(config.get('TEST'));
 
 /// ----------------------------- КНОПКИ -----------------------
 // тестируем работу с кнопками. Для того чтобы всё выполнялось по порядку, делаем функцию асинхронной и потом при помощи await ожидаем выполнение очередной задачи. При этом не забываем трай-кэтч при любой асинхронщине, чтобы не крашить бота при асинхронной ошибке
@@ -204,13 +206,15 @@ bot.command(botCommands.restoreId, (ctx) => {
 bot.on(message('text'), async (ctx) => {
   const userId = getUserId(ctx);
   if (!userId) {
-    console.log('ошибка userId');
+    // console.log('ошибка userId');
+    logger.error('ошибка userId');
     return;
   }
 
   // if (ctx?.session?.createTextFromVoice === true) {
   if (stateManagerApp.getState(userId) === stateApplication.createTextFromVoice) {
-    console.log('Попытка печатать текст при запросе голосового сообщения');
+    // console.log('Попытка печатать текст при запросе голосового сообщения');
+    logger.error('Попытка печатать текст при запросе голосового сообщения');
     ctx.reply(
       'Вы попытались напечатать текст, а ожидалось голосовое сообщение. Вы плохо поступили! Ожидание голосового сообщения завершено, текст проигнорирован!',
     );
@@ -238,14 +242,20 @@ bot.on(message('text'), async (ctx) => {
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
     // console.log(ctx.message.text);
-    console.log(`................Вопрос пользователя ................ : \n ${ctx.message.text}`);
-    console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
-    console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
-    console.log('текущая длинна сессии - ', ctx.session.sessionLength);
+    // console.log(`................Вопрос пользователя ................ : \n ${ctx.message.text}`);
+    // console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    // console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
+    // console.log('текущая длинна сессии - ', ctx.session.sessionLength);
+
+    logger.info(`................Вопрос пользователя ................ : \n ${ctx.message.text}`);
+    logger.info(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    logger.info(`сообщение от пользователя - ${fromWho(ctx?.message?.from?.id)}`);
+    logger.info(`текущая длинна сессии - ${ctx.session.sessionLength}`);
 
     // проверяем длинну сессии
     if (await checkLength(ctx, ctx.session.sessionLength)) {
-      console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      // console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      logger.info('Принудительная перезагрузка бота из за большой длинны сессии');
       return;
     }
 
@@ -255,7 +265,8 @@ bot.on(message('text'), async (ctx) => {
 
     const state = stateManagerModel.getState(userId);
 
-    console.log('Получаем стейт пользователя - ', state);
+    // console.log('Получаем стейт пользователя - ', state);
+    logger.info(`Получаем стейт пользователя - ${state}`);
     // console.log('id пользователя - ', userId);
 
     const response = await openAi.chat(ctx.session.messages, state);
@@ -263,8 +274,10 @@ bot.on(message('text'), async (ctx) => {
 
     // проверяем, прошел ли запрос по таймайту, если нет - пишем сообщение пользователю и ничего не делаем
     if (typeof response === 'string') {
-      console.log('ошибка таймаута ...................................');
-      console.log('ошибочный запрос: ', ctx.message.text);
+      // console.log('ошибка таймаута ...................................');
+      // console.log('ошибочный запрос: ', ctx.message.text);
+
+      logger.error(`ошибка таймаута ...................................: ${ctx.message.text}`);
 
       ctx.session.messages.pop(); // удалим наш запрос, который вызвал ошибку
       await ctx.reply(ERROR_MESSAGES.timeOutChat);
@@ -273,7 +286,8 @@ bot.on(message('text'), async (ctx) => {
 
     if (!response) {
       await ctx.reply(ERROR_MESSAGES.noResponse);
-      console.log('ошибка ответа chatGPT');
+      // console.log('ошибка ответа chatGPT');
+      logger.error('ошибка ответа chatGPT');
       return;
     }
 
@@ -286,7 +300,8 @@ bot.on(message('text'), async (ctx) => {
     // textLoader.hide();
 
     await ctx.reply(response.content);
-    console.log(`----------------Ответ полученный от AI-------------- : \n ${response.content} \n \n`);
+    // console.log(`----------------Ответ полученный от AI-------------- : \n ${response.content} \n \n`);
+    logger.info(`----------------Ответ полученный от AI-------------- : \n ${response.content} \n \n`);
   } catch (err) {
     if (err) {
       await commandList.rebootBot(
@@ -327,7 +342,8 @@ bot.on(message('voice'), async (ctx) => {
     // запускаем проверку голосового сообщения и если какая из них сработала, не будем передавать его в AI
 
     if (text === 'ошибка') {
-      console.log('ошибка превышения таймаута на перевод голоса в текст');
+      // console.log('ошибка превышения таймаута на перевод голоса в текст');
+      logger.info('ошибка превышения таймаута на перевод голоса в текст');
       await ctx.reply(ERROR_MESSAGES.timeOutVoice);
 
       return;
@@ -342,7 +358,8 @@ bot.on(message('voice'), async (ctx) => {
 
     // проверяем длинну сессии
     if (await checkLength(ctx, ctx.session.sessionLength)) {
-      console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      // console.log('Принудительная перезагрузка бота из за большой длинны сессии');
+      logger.info('Принудительная перезагрузка бота из за большой длинны сессии');
       return;
     }
 
@@ -353,27 +370,37 @@ bot.on(message('voice'), async (ctx) => {
     ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
     ctx.session.messages.push({ role: roles.USER, content: text });
 
-    console.log(`................Голосовой вопрос пользователя ................ : \n ${text}`);
-    console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
-    console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
-    console.log('текущая длинна сессии - ', ctx.session.sessionLength);
+    // console.log(`................Голосовой вопрос пользователя ................ : \n ${text}`);
+    // console.log(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    // console.log('сообщение от пользователя - ', fromWho(ctx?.message?.from?.id));
+    // console.log('текущая длинна сессии - ', ctx.session.sessionLength);
+
+    logger.info(`................Голосовой вопрос пользователя ................ : \n ${text}`);
+    logger.info(`from ${ctx?.message?.from?.first_name} ${ctx?.message?.from?.last_name}, id = ${ctx?.message?.from?.id}`);
+    logger.info(`сообщение от пользователя - ${fromWho(ctx?.message?.from?.id)}`);
+    logger.info(`текущая длинна сессии - ${ctx.session.sessionLength}`);
 
     const userIdVoise = ctx?.message?.from?.id ?? ctx?.update?.callback_query?.from?.id;
     if (!userIdVoise) {
-      console.log('ошибка userId');
+      // console.log('ошибка userId');
+      logger.info('ошибка userId');
       return;
     }
 
     const state = stateManagerModel.getState(userIdVoise);
 
-    console.log('Получаем стейт пользователя - ', state);
-    console.log('id пользователя - ', userIdVoise);
+    // console.log('Получаем стейт пользователя - ', state);
+    // console.log('id пользователя - ', userIdVoise);
+
+    logger.info(`Получаем стейт пользователя - ${state}`);
+    logger.info(`id пользователя - ${userIdVoise}`);
 
     const response = await openAi.chat(ctx.session.messages, state);
 
     if (!response) {
       await ctx.reply(ERROR_MESSAGES.noResponse);
-      console.log('ошибка ответа chatGPT');
+      // console.log('ошибка ответа chatGPT');
+      logger.error('ошибка ответа chatGPT');
       return;
     }
 
@@ -388,11 +415,9 @@ bot.on(message('voice'), async (ctx) => {
 
     // выводим ответ аи в боте
     await ctx.reply(response.content);
-    console.log(`................Голосовой ответ полученный от AI................ : \n ${response.content}`);
-    // await ctx.reply(JSON.stringify(link, null, 2)); // парсим джейсон
+    // console.log(`................Голосовой ответ полученный от AI................ : \n ${response.content}`);
 
-    // console.log(link); // тут мы понимаем, что стринглифай немного неправильно приводит объект к строке. на самом деле это действительно полноценный объект с полем href которое нас будет интересовать в дальнейшем
-    // console.log(link.href); // именно эта ссылка нам будет нужна
+    logger.info(`................Голосовой ответ полученный от AI................ : \n ${response.content}`);
   } catch (err) {
     if (err) {
       await commandList.rebootBot(
@@ -409,34 +434,6 @@ bot.on(message('voice'), async (ctx) => {
   }
 });
 
-// global.process
-
-// nodemon({ script: bot.launch(), exitcrash: true }); // перезапуск через nodemon. Работает криво
-
 // прерывания нужны для адекватного "мягкого" завершения работы бота при получении от системы или пользователя соответствующих запросов. process.once - обрабатывает эти запросы, а коллбэк завершает работу бота () => bot.stop('SIGINT')
 process.once('SIGINT', () => bot.stop('SIGINT')); // остановка бота по условию Signal Interrupt - прерыванию процесса, например пользователем ctrl+c.
 process.once('SIGTERM', () => bot.stop('SIGTERM')); // (Signal Terminate) остановка бота по завершению работы, например от системы
-
-// bot.on(message('text'), async (ctx) => {
-//   ctx.session.sessionLength = ctx.session.sessionLength + 1 || 1;
-
-//   ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
-//   ctx.session.messages.push({ role: roles.USER, content: ctx.message.text });
-//   // console.log(ctx.message.text);
-
-//   const userId = ctx?.message?.from?.id ?? ctx?.update?.callback_query?.from?.id;
-//   if (!userId) {
-//     console.log('ошибка userId');
-//     return;
-//   }
-
-//   const response = await openAi.chat(ctx.session.messages, state);
-
-//   ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
-//   ctx.session.messages.push({
-//     role: roles.ASSISTANT,
-//     content: response.content,
-//   });
-
-//   await ctx.reply(response.content);
-// });

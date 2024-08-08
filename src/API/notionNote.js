@@ -1,5 +1,7 @@
 import { Client } from '@notionhq/client';
 import config from 'config';
+import logger from './logger.js';
+// import logger from './logger';
 
 const notion = new Client({
   auth: config.get('NOTION_RECORDS_KEY'),
@@ -58,7 +60,7 @@ export async function createNotionRecord(text) {
 // https://developers.notion.com/reference/post-search
 export async function getNotionPageSeach() {
   try {
-    const response = await notion.search({
+    await notion.search({
     // query: 'External tasks',
     // filter: {
     //   value: 'database',
@@ -69,15 +71,16 @@ export async function getNotionPageSeach() {
         timestamp: 'last_edited_time',
       },
     });
-    console.log(response);
   } catch (err) {
-    console.log('Ошибка выгрузки данных из notion-блокнота: ', err.message);
+    // console.log('Ошибка выгрузки данных из notion-блокнота: ', err.message);
+    logger.error(`Ошибка выгрузки данных из notion-блокнота:  ${err.message}`);
   }
 }
 
 export async function queryNote() {
   try {
-    console.log('Querying database List...');
+    // console.log('Querying database List...');
+    logger.info('Querying database List...');
     const pagesList = await notion.databases.query({
       database_id: config.get('NOTION_RECORDS_DB_ID'),
 
@@ -93,7 +96,8 @@ export async function queryNote() {
     const textList = pagesList.results.map((item) => `${item.properties['Сокращенная запись'].title[0].plain_text} --- ${item.url}`);
     return textList;
   } catch (error) {
-    console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    // console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    logger.error(`Ошибка выгрузки данных из notion-TODO list : ${error.message}`);
     return 'error';
   }
 }

@@ -1,5 +1,6 @@
 import { Client } from '@notionhq/client';
 import config from 'config';
+import logger from './logger.js';
 
 const notionTODO = new Client({
   auth: config.get('NOTION_TODO_LIST_KEY'),
@@ -58,7 +59,8 @@ export async function createNotionTODO(text) {
 // возможные сортировки https://developers.notion.com/reference/post-database-query-filter
 export async function queryTODO() {
   try {
-    console.log('Querying database TODO...');
+    // console.log('Querying database TODO...');
+    logger.info('Querying database TODO...');
     const pagesList = await notionTODO.databases.query({
       database_id: config.get('NOTION_TODO_LIST_DB_ID'),
       // filter: {
@@ -88,7 +90,8 @@ export async function queryTODO() {
     const textList = pagesList.results.map((item) => `${item.properties['Задача'].title[0].plain_text} --- ${item.url}`);
     return textList;
   } catch (error) {
-    console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    // console.log('Ошибка выгрузки данных из notion-TODO list :', error.message);
+    logger.error(`Ошибка выгрузки данных из notion-TODO list : ${error.message}`);
     return 'error';
   }
 }

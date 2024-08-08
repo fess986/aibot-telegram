@@ -15,7 +15,8 @@
       "outFiles": [],
       "env": {
         "NODE_OPTIONS": "--inspect",
-      }
+      },
+      "console": "integratedTerminal"
     }
   ]
 }

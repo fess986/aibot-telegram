@@ -2,6 +2,7 @@ import { existsSync } from 'fs';
 import path from 'path';
 import config from 'config';
 import axios from 'axios';
+import logger from './API/logger.js';
 
 import { files } from './utils/files.js';
 import removeFile, {
@@ -29,11 +30,16 @@ import {
 export const commandList = {
   async newSession(ctx) {
     try {
-      console.log('..............Обнуление сессии...............');
-      console.log(
-        `from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`,
-      );
-      console.log('обнуление произвел - ', fromWho(ctx?.from?.id), '\n \n');
+      // console.log('..............Обнуление сессии...............');
+      // console.log(
+      //   `from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`,
+      // );
+      // console.log('обнуление произвел - ', fromWho(ctx?.from?.id), '\n \n');
+
+      logger.info('..............Обнуление сессии...............');
+      logger.info(`from ${ctx?.from?.first_name} ${ctx?.from?.last_name}, id = ${ctx?.from?.id}`);
+      logger.info(`обнуление произвел - ${fromWho(ctx?.from?.id)} \n \n`);
+
       ctx.session.messages ??= JSON.parse(JSON.stringify(INIT_SESSION));
       // ctx.session.messages = ctx.session.messages || JSON.parse(JSON.stringify(INIT_SESSION));
       ctx.session.messages = JSON.parse(JSON.stringify(INIT_SESSION));
@@ -43,7 +49,8 @@ export const commandList = {
 
       const userId = getUserId(ctx);
       if (!userId) {
-        console.log('ошибка userId');
+        // console.log('ошибка userId');
+        logger.error('ошибка userId');
         return;
       }
       stateManagerApp.resetState(userId); // устанавливаем состояние приложение в дефолтное
@@ -62,7 +69,8 @@ export const commandList = {
       // ctx.session = JSON.parse(JSON.stringify(INIT_SESSION))
       // await ctx.reply('Начало новой сессии. Жду вашего голосового или текстового сообщения. Чтобы начать новую сессию введите /new в чате!!!!')
     } catch (err) {
-      console.log('Ошибка обнуления сессии', err.message);
+      // console.log('Ошибка обнуления сессии', err.message);
+      logger.error('Ошибка обнуления сессии', err.message);
 
       if (!!ctx) {
         await ctx.reply('Ошибка обнуления сессии');
@@ -196,7 +204,8 @@ export const commandList = {
 
   async rebootBot(ctx, text, err = { message: 'объект ошибки отсутствует' }) {
     try {
-      console.log(`Сообщение ошибки при ребуте --- ${err.message}`);
+      // console.log(`Сообщение ошибки при ребуте --- ${err.message}`);
+      logger.error(`Сообщение ошибки при ребуте --- ${err.message}`);
 
       if (!ctx) {
         throw new Error('НЕТ КОНТЕКСТА ПРИ ПЕРЕДАЧЕ ОШИБКИ В РЕБУТ');
@@ -208,27 +217,34 @@ export const commandList = {
         ctx.session = {};
       }
 
-      console.log(ctx);
+      // console.log(ctx);
+      logger.info(ctx);
+
       ctx.session = {};
 
       if (err.code === 403 || err.code === 429) {
-        console.log('ошибка 403!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        // console.log('ошибка 403!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
+        logger.error('ошибка 403!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!');
         return;
       }
 
       if (text) {
-        console.log(`${text} --- `, err.message);
+        // console.log(`${text} --- `, err.message);
+        logger.error(`${text} --- ${err.message}`);
         await ctx.reply(`${text} - ${err.message}`);
       }
 
-      console.log('перезапуск бота...');
+      // console.log('перезапуск бота...');
+      logger.error('перезапуск бота...');
 
       await this.newSession(ctx);
-      console.log('Бот перезапущен!!!');
+      // console.log('Бот перезапущен!!!');
+      logger.info('Бот перезапущен!!!');
       await ctx.reply('<b>Бот перезапущен.</b>', { parse_mode: 'HTML' });
       // bot.launch();
     } catch (error) {
-      console.log('ошибка перезапуска бота', error.message);
+      // console.log('ошибка перезапуска бота', error.message);
+      logger.error(`ошибка перезапуска бота - ${error.message}`);
 
       if (!!ctx) {
         await ctx.reply('ошибка перезапуска бота', error.message);
@@ -395,7 +411,8 @@ export const commandList = {
         `Создана новая запись в notion. Ссылка на неё: ${response.url}`,
       );
     } catch (err) {
-      console.log('ошибка добавление записи в ноушен', err.message);
+      // console.log('ошибка добавление записи в ноушен', err.message);
+      logger.error(`ошибка добавление записи в ноушен ${err.message}`);
     }
   },
 
@@ -407,7 +424,8 @@ export const commandList = {
         `Создана новая запись в notion. Ссылка на неё: ${response.url}`,
       );
     } catch (err) {
-      console.log('ошибка добавление записи в ноушен', err.message);
+      // console.log('ошибка добавление записи в ноушен', err.message);
+      logger.error(`ошибка добавление записи в ноушен - ${err.message}`);
     }
   },
 
@@ -419,7 +437,8 @@ export const commandList = {
         `Создана новая запись в notion TODO List. Ссылка на неё: ${response.url}`,
       );
     } catch (err) {
-      console.log('ошибка добавления записи в ноушен TODO List', err.message);
+      // console.log('ошибка добавления записи в ноушен TODO List', err.message);
+      logger.error(`ошибка добавления записи в ноушен TODO List - ${err.message}`);
     }
   },
 
@@ -430,10 +449,11 @@ export const commandList = {
       const formattedList = list.join('\n');
       ctx.reply(formattedList);
     } catch (err) {
-      console.log(
-        'ошибка получения записей из ноушен - TODO List - а',
-        err.message,
-      );
+      // console.log(
+      //   'ошибка получения записей из ноушен - TODO List - а',
+      //   err.message,
+      // );
+      logger.error(`ошибка получения записей из ноушен - TODO List - ${err.message}`);
     }
   },
 
@@ -444,7 +464,8 @@ export const commandList = {
       const formattedList = list.join('\n');
       ctx.reply(formattedList);
     } catch (err) {
-      console.log('ошибка получения записей из ноушен - Note', err.message);
+      // console.log('ошибка получения записей из ноушен - Note', err.message);
+      logger.error(`ошибка получения записей из ноушен - Note - ${err.message}`);
     }
   },
 
@@ -455,7 +476,8 @@ export const commandList = {
       const formattedList = list.join('\n');
       ctx.reply(formattedList);
     } catch (err) {
-      console.log('ошибка получения записей из напоминалок', err.message);
+      // console.log('ошибка получения записей из напоминалок', err.message);
+      logger.error(`ошибка получения записей из напоминалок - ${err.message}`);
     }
   },
 
@@ -464,7 +486,8 @@ export const commandList = {
     try {
       await setModel(ctx, MODELS.gpt3_5);
     } catch (err) {
-      console.log('ошибка установки модели 3.5', err.message);
+      // console.log('ошибка установки модели 3.5', err.message);
+      logger.error(`ошибка установки модели 3.5 - ${err.message}`);
     }
   },
 
@@ -473,7 +496,8 @@ export const commandList = {
     try {
       await setModel(ctx, MODELS.gpt4o);
     } catch (err) {
-      console.log('ошибка установки модели 4', err.message);
+      // console.log('ошибка установки модели 4', err.message);
+      logger.error(`ошибка установки модели 4 - ${err.message}`);
     }
   },
 
@@ -482,7 +506,8 @@ export const commandList = {
     try {
       await setModel(ctx, MODELS.gpt4o_mini);
     } catch (err) {
-      console.log('ошибка установки модели 4', err.message);
+      // console.log('ошибка установки модели 4', err.message);
+      logger.error(`ошибка установки модели 4 - ${err.message}`);
     }
   },
 
@@ -496,7 +521,8 @@ export const commandList = {
         await ctx.reply('Ошибка получения данных модели');
       }
     } catch (err) {
-      console.log('ошибка получения текущих данных модели', err.message);
+      // console.log('ошибка получения текущих данных модели', err.message);
+      logger.error(`ошибка получения текущих данных модели - ${err.message}`);
     }
   },
 
@@ -510,7 +536,8 @@ export const commandList = {
         setTemperature(ctx, temp);
       }
     } catch (err) {
-      console.log('ошибка установки температуры модели', err.message);
+      // console.log('ошибка установки температуры модели', err.message);
+      logger.error(`ошибка установки температуры модели - ${err.message}`);
     }
   },
 };
