@@ -1,6 +1,7 @@
 .idea
 node_modules
 logstxt
+logs
 records/karpov
 records/karpov.zip
 config/default.json
