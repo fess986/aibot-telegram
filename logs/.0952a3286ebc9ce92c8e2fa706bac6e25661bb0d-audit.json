@@ -6,19 +6,9 @@
     "auditLog": "/mnt/disk_a/Users/Fess/Google Диск/project/gpt-telegram/logs/.0952a3286ebc9ce92c8e2fa706bac6e25661bb0d-audit.json",
     "files": [
         {
-            "date": 1722865604746,
-            "name": "/mnt/disk_a/Users/Fess/Google Диск/project/gpt-telegram/logs/log-2024-08-05.log",
-            "hash": "b171b9588ada49bfeaea062e1d6c5ee1a59b40e61c879f8801b830532dcb68ff"
-        },
-        {
-            "date": 1723132180185,
-            "name": "/mnt/disk_a/Users/Fess/Google Диск/project/gpt-telegram/logs/log-2024-08-08.log",
-            "hash": "8b4b39054f6b688c549b32e6fb459c94cc91c14ff3f61d7db24211cb8d382787"
-        },
-        {
-            "date": 1723139130444,
-            "name": "/mnt/disk_a/Users/Fess/Google Диск/project/gpt-telegram/logs/log-2024-08-08.log.1",
-            "hash": "47e95f3504b2dc80dae4033cb6926ba093cd352ba782be125a8d51b38c599ebb"
+            "date": 1725971772690,
+            "name": "/mnt/disk_a/Users/Fess/Google Диск/project/gpt-telegram/logs/log-2024-09-10.log",
+            "hash": "a6559cec8c13894ab33f1f920754d7088d696683c7f45a8402f8693344c0258b"
         }
     ],
     "hashType": "sha256"
