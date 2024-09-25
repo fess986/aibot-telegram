@@ -31,7 +31,7 @@ export const CONTEXT_MAX = {
   role: roles.USER,
   content:
 `
-  Сейчас я пишу фронтенд для приложения Films Library. Инициализирован проект так:
+  Сейчас я пишу фронтенд для приложения Films Library (библиотека фильмов, где можно посмотреть новинки, описание фильмов, оставить отзывы и добавить себе в избранные). Инициализирован проект так:
   npm create vite@latest films-library-frontend -- --template react-ts
 
    В package.json (указываю основные модули):
@@ -39,7 +39,9 @@ export const CONTEXT_MAX = {
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1",
-    "styled-components": "^6.1.11"
+    "styled-components": "^6.1.11",
+    "@reduxjs/toolkit": "^2.2.7",
+    "react-redux": "^9.1.2",
   },
    devDependencies: {
      "typescript": "^5.2.2",
