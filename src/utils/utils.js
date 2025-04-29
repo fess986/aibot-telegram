@@ -80,6 +80,10 @@ export function fromWho(id) {
       userName = 'Маша Царькова';
       break;
 
+    case 5284245542: // добавлен
+      userName = 'Серега Королёв';
+      break;
+
     default:
       userName = `неизвестный id = ${id}`;
   }
