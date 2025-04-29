@@ -184,6 +184,62 @@ export const CONTEXT_LIBRARY_FRONTEND = {
   `,
 };
 
+export const CONTEXT_LIBRARY_FULLSTACK = {
+  role: roles.USER,
+  content: `
+  Сейчас я пишу клиент-серверное приложение  Films Library. Инициализирован проект так:
+  npm create vite@latest films-library-frontend -- --template react-ts
+
+   package.json для клиента (указываю основные модули):
+   "dependencies": {
+    "react": "^18.2.0",
+  },
+   devDependencies: {
+     "typescript": "^5.2.2",
+    "vite": "^5.2.0"
+   }
+
+   Для сервера:
+     "dependencies": {
+    "axios": "^1.7.7",
+    "express": "^4.19.2",
+    "express-validator": "^7.2.0",
+    "mongoose": "^8.4.1",
+  },
+   
+   Требуется помощь в написании кода а так же взаимодействием с vite
+  `,
+};
+
+export const CONTEXT_LIBRARY_FULLSTACK_TESTING = {
+  role: roles.USER,
+  content: `
+  Сейчас я пишу тесты vitest для фронтэнда клиент-серверного приложения  Films Library. Инициализирован проект так:
+  npm create vite@latest films-library-frontend -- --template react-ts
+  Мне нужна помощь в написании тестов vitest. У меня установлены следущие основные пакеты в проекте. Если для какой-либо задачи нужно добавить какой-либо пакет, напишите мне.
+
+   package.json  (указываю основные модули):
+   "dependencies": {
+    "react": "^18.2.0"
+    "@reduxjs/toolkit": "^2.2.7"
+    "history": "^5.3.0"
+    "react-redux": "^9.1.2"
+  },
+   devDependencies: {
+    "@testing-library/react": "^16.2.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@vitest/expect": "^3.0.5",
+    "axios-mock-adapter": "^2.1.0",
+    "faker": "^6.6.6",
+    "jsdom": "^26.0.0",
+    "typescript": "^5.2.2",
+    "vite": "^5.2.0",
+    "vitest": "^3.0.5"
+   }
+      Иногда я буду присылать аналоги из jest, чтобы ты помог перевести их в vitest.
+  `,
+};
+
 /// /////////////////////// контексты, не используемые в боте //////////////////////////
 
 // контексты для AI
