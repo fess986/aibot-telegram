@@ -60,6 +60,10 @@ export function fromWho(id) {
       userName = 'Царьков Cанёк';
       break;
 
+    case 6647790802: // добавлен
+      userName = 'Сидоркина Лена';
+      break;
+
     case 675796197: // добавлен
       userName = 'Есин Вячеслав';
       break;
