@@ -511,6 +511,26 @@ export const commandList = {
     }
   },
 
+  // устанавливаем модель gpt5
+  async setGPT5(ctx) {
+    try {
+      await setModel(ctx, MODELS.gpt5);
+    } catch (err) {
+      // console.log('ошибка установки модели 5', err.message);
+      logger.error(`ошибка установки модели 5 - ${err.message}`);
+    }
+  },
+
+  // устанавливаем модель gpt5_mini
+  async setGPT5_mini(ctx) {
+    try {
+      await setModel(ctx, MODELS.gpt5_mini);
+    } catch (err) {
+      // console.log('ошибка установки модели 5', err.message);
+      logger.error(`ошибка установки модели 5 - ${err.message}`);
+    }
+  },
+
   // получаем текущие данные модели
   async getStateGPT(ctx) {
     try {

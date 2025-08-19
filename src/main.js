@@ -65,6 +65,16 @@ bot.command(botCommands.setGPT4_mini, async (ctx) => {
   await commandList.setGPT4_mini(ctx);
 });
 
+// устанавливаем модель gpt5
+bot.command(botCommands.setGPT5, async (ctx) => {
+  await commandList.setGPT5(ctx);
+});
+
+// устанавливаем модель gpt5_mini
+bot.command(botCommands.setGPT5_mini, async (ctx) => {
+  await commandList.setGPT5_mini(ctx);
+});
+
 // получаем текущие данные модели
 bot.command(botCommands.getStateGPT, async (ctx) => {
   await commandList.getStateGPT(ctx);
