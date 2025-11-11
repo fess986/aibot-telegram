@@ -78,6 +78,7 @@ class OpenAIClass {
       return responseText;
     } catch (err) {
       // console.log('error chating with gpt', err.message);
+      console.log(err);
       logger.error('error chating with gpt', err.message);
       return null; // Возвращаем null или другое значение по умолчанию в случае ошибки
     }

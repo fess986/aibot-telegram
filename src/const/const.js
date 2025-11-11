@@ -91,7 +91,7 @@ export const MODELS = {
 };
 
 export const DEFAULT_MODEL_STATE = {
-  model: MODELS.gpt_5_mini,
+  model: MODELS.gpt4o_mini,
   temperature: 0.4,
 };
 
